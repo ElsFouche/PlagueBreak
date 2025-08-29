@@ -1,0 +1,96 @@
+{
+    "name": "InputSettings",
+    "maps": [
+        {
+            "name": "Main",
+            "id": "4b6e5552-6878-447e-a8a4-cb85ee828d7a",
+            "actions": [
+                {
+                    "name": "Touch",
+                    "type": "Button",
+                    "id": "48bd7c4e-db03-45b8-bb3d-1a53d4cb122f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MultiTouch",
+                    "type": "Button",
+                    "id": "5b6876bc-f962-46b1-a750-dba53b532c78",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Hold",
+                    "type": "Button",
+                    "id": "a2443418-349b-46ee-8026-58f7e344cb07",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "ee6b3f68-f22f-4332-8f2e-9a7b5e909f31",
+                    "path": "<Touchscreen>/Press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "DefaultControls",
+                    "action": "Touch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d268e16b-37f8-4162-95a0-76c1c2c11fc5",
+                    "path": "<Touchscreen>/touch*/Press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "DefaultControls",
+                    "action": "MultiTouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "05db8502-66d6-4824-860b-3dc54df41c70",
+                    "path": "<Touchscreen>/primaryTouch",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "DefaultControls",
+                    "action": "Hold",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "DefaultControls",
+            "bindingGroup": "DefaultControls",
+            "devices": [
+                {
+                    "devicePath": "<Touchscreen>",
+                    "isOptional": true,
+                    "isOR": false
+                },
+                {
+                    "devicePath": "<Mouse>",
+                    "isOptional": true,
+                    "isOR": false
+                },
+                {
+                    "devicePath": "<Keyboard>",
+                    "isOptional": true,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
+}
