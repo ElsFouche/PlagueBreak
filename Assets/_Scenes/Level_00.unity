@@ -1276,6 +1276,74 @@ Transform:
   - {fileID: 994085831}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1381450603
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1381450605}
+  - component: {fileID: 1381450604}
+  m_Layer: 0
+  m_Name: EnemySystem
+  m_TagString: Untagged
+  m_Icon: {fileID: -1412012063857583412, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1381450604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1381450603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c911837b47aeecf4da96bd9697319ec0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  numWaves: 1
+  spawnPoints:
+  - {x: 1.32, y: 4.5, z: 1}
+  - {x: 0, y: 5, z: 0}
+  - {x: -1.5, y: 4.5, z: 1}
+  - {x: -0.68, y: 5.06, z: 1.64}
+  enemies:
+  - enemyType: 1
+    baseHealth: 7.8
+    baseDamage: 3.1
+    partOfWave: 1
+  - enemyType: 1
+    baseHealth: 6.5
+    baseDamage: 1.8
+    partOfWave: 1
+  waveHealthBar: {fileID: 1894083113}
+  basicEnemies:
+  - {fileID: 3533799413326569316, guid: 2adfe5f1f30b3cc4aa2bce5084dfbbbb, type: 3}
+  - {fileID: 3533799413326569316, guid: 81a34a5c53ed3414989d4f2988d97dfc, type: 3}
+  - {fileID: 3533799413326569316, guid: fac17df9225ed244bb823b4f93d71b53, type: 3}
+  glassCannons: []
+  tanks: []
+  bosses: []
+  difficultyMod: 1
+--- !u!4 &1381450605
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1381450603}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1698784971
 GameObject:
   m_ObjectHideFlags: 0
@@ -1741,3 +1809,4 @@ SceneRoots:
   - {fileID: 365458654}
   - {fileID: 1274984820}
   - {fileID: 275245693}
+  - {fileID: 1381450605}
