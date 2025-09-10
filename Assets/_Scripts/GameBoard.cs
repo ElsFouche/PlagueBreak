@@ -81,7 +81,7 @@ public class GameBoard : MonoBehaviour
         yield return null;
     }
 }
-
+// Todo:
 // Establish our grid using the double for loop. 
 // (The grid creation can happen at game start)
 // Create an array of Vector2s which represent the game board's cells.
