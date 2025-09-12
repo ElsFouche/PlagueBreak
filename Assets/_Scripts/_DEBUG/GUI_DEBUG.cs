@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
+#if (UNITY_EDITOR)
 using UnityEditor;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 [CustomEditor(typeof(EnemyHandler))]
 public class GUI_DEBUG : Editor
@@ -17,3 +15,4 @@ public class GUI_DEBUG : Editor
         }
     }
 }
+#endif

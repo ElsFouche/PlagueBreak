@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.Serialization;
-using UnityEditor.ShaderGraph.Drawing;
 using UnityEngine;
 
 [Serializable]
