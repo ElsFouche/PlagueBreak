@@ -629,7 +629,7 @@ GameObject:
   - component: {fileID: 365458655}
   m_Layer: 0
   m_Name: -----GameBoard-----
-  m_TagString: Untagged
+  m_TagString: GameBoard
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -661,6 +661,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 473331a656103ff4fb84bb25788a0a8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boardStartPosition: {x: -3, y: -3}
+  cellSize: {x: 0.75, y: 0.75}
   width: 6
   height: 6
   divisions: 8
@@ -1613,6 +1615,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   touchRadius: 1
+  validSwipeDistance: 1
 --- !u!4 &1781714266
 Transform:
   m_ObjectHideFlags: 0
