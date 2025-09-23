@@ -5,11 +5,10 @@ using PieceTypes = E_PieceTypes.PieceType;
 
 public class GamePiece : MonoBehaviour
 {
-    // private Vector2 key;
+    private GameBoard gameBoard;
     private Vector3 originalPosition;
     private Quaternion originalRotation;
     private Vector3 originalScale;
-    private GameBoard gameBoard;
     private PieceTypes pieceType;
     private List<Vector2> horizontalMatches = new();
     private List<Vector2> verticalMatches = new();
@@ -45,8 +44,13 @@ public class GamePiece : MonoBehaviour
     {
         return verticalMatches;
     }
+
     
     // Setters
+    public void SetGameBoard(GameBoard newGameBoard)
+    {
+        this.gameBoard = newGameBoard;
+    }
 
     public void SetNewPosition(Vector3 newPosition)
     {
@@ -63,18 +67,23 @@ public class GamePiece : MonoBehaviour
         originalScale = new Vector3(newScale.x, newScale.y, newScale.z);
     }
 
-    public void SetGameBoard(GameBoard newGameBoard)
-    {
-        this.gameBoard = newGameBoard;
-    }
 
     public PieceTypes SetPieceType(PieceTypes type)
     {
         pieceType = type;
+
         MeshRenderer pieceColor = this.GetComponent<MeshRenderer>();
+
+        if (pieceColor == null)
+        {
+            return type;
+        }
 
         switch (type) 
         {
+            case PieceTypes.None:
+                pieceColor.material.color = new Color(0.2f, 0.2f, 0.2f);
+                break;
             case PieceTypes.Red:
                 pieceColor.material.color = new Color(1.0f,0.0f,0.0f);
                 break;
@@ -93,23 +102,43 @@ public class GamePiece : MonoBehaviour
 
     public void AddHorizontalMatch(Vector2 gridCoord)
     {
-        horizontalMatches.Add(gridCoord);
+        if (!horizontalMatches.Contains(gridCoord))
+        {
+            horizontalMatches.Add(gridCoord);
+        }
+/*
         if (horizontalMatches.Count > 2 )
         {
             // Match made
-            Debug.Log("Horizontal match made.");
             // Debug
             foreach (var piece in horizontalMatches)
             {
-                gameBoard.GridCoordToGamePiece(piece).gameObject.SetActive(false);
+                gameBoard.GridCoordToGamePiece(piece).gameObject.SetActive(false);                
             }
+
             this.gameObject.SetActive(false);
         }
+
+        string matches = "";
+        foreach (var piece in horizontalMatches)
+        {
+            matches += piece.ToString();
+            matches += "\n";
+        }
+        if (matches.Length > 0)
+        {
+            Debug.Log("Horizontal match coordinates: \n" + matches);
+        }
+*/
     }
 
     public void AddVerticalMatch(Vector2 gridCoord)
     {
-        verticalMatches.Add(gridCoord);
+        if (!verticalMatches.Contains(gridCoord))
+        {
+            verticalMatches.Add(gridCoord);
+        }
+/*
         if (verticalMatches.Count > 2 )
         {
             // Match made
@@ -121,6 +150,18 @@ public class GamePiece : MonoBehaviour
             }
             this.gameObject.SetActive(false);
         }
+
+        string matches = "";
+        foreach (var piece in horizontalMatches)
+        {
+            matches += piece.ToString();
+            matches += "\n";
+        }
+        if (matches != "")
+        {
+            Debug.Log("Vertical match coordinates: \n" + matches);
+        }
+*/
     }
 
     public void RemoveHorizontalMatch(Vector2 gridCoord)
@@ -161,45 +202,210 @@ public class GamePiece : MonoBehaviour
         yield return null;
     }
 
+    public void FindMatches()
+    {
+        FindHorizontalMatches();
+        FindVerticalMatches();
+    }
+
     /// <summary>
     /// BUGGED
     /// </summary>
     /// <returns></returns>
-    public bool FindMatches()
+    public int FindHorizontalMatches(GamePiece searchChainOrigin = null)
     {
-        GamePiece temp;
-        int numMatches = 0;
-        Vector2 gridLocation = gameBoard.WorldPositionToGrid(originalPosition);
+        GamePiece tempData;
 
-        foreach (var tempKey in gameBoard.GetAdjacentGridCoords(originalPosition))
+        // int totalMatches = 0;
+        Vector2 gridLocation = gameBoard.WorldPositionToGrid(originalPosition);
+        Vector2 originLocation = gridLocation;
+        if (searchChainOrigin)
         {
+            originLocation = gameBoard.WorldPositionToGrid(searchChainOrigin.GetOriginalPosition());
+        }
+
+        horizontalMatches.Clear();
+
+        foreach (Vector2 tempKey in gameBoard.GetAdjacentGridCoords(originalPosition))
+        {
+            // If a valid game piece exists at the adjacent grid coord, store its data
             if (gameBoard.GridCoordToGamePiece(tempKey))
             {
-                temp = gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>();
+                tempData = gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>();
             }
             else
             {
-                Debug.Log("Adjacent piece at: " + tempKey + " not found.");
+                // Debug.Log("Adjacent piece at: " + tempKey + " not found.");
 
-                return false;
+                return 0;
             }
 
-            if (temp.GetPieceType() == pieceType)
+            
+            if (tempData.GetPieceType() == pieceType)
             {
-                // Debug.Log("Key: " + tempKey);
                 if (tempKey.y - gridLocation.y == 0)
                 {
+                    // Debug.Log("Piece data " + this.GetInstanceID() + " found a horizontal match.");
+                    if (originLocation != tempKey)
+                    {
+                        // Debug.Log("Check backtrack prevented.");
+                        // totalMatches += 
+                        tempData.FindHorizontalMatches(this);
+                    } 
+                    /*
+                    else 
+                    {
+                        totalMatches++; 
+                    }
+*/
                     AddHorizontalMatch(tempKey);
-                    gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().AddHorizontalMatch(gridLocation);
-                } else {
-                    AddVerticalMatch(tempKey);
-                    gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().AddVerticalMatch(gridLocation);
+                    foreach (Vector2 match in tempData.GetHorizontalMatches())
+                    {
+                        AddHorizontalMatch(match);
+                    }
+/*
+                    else if (searchChainOrigin && tempKey == gameBoard.WorldPositionToGrid(searchChainOrigin.GetOriginalPosition())) 
+                    { 
+                        totalMatches++; 
+                    }
+*/
                 }
-
-                numMatches++;
             }
         }
-        
-        return numMatches > F_GameSettings.PiecesInAMatch();
+        // Debug.Log("Piece data " + this.GetInstanceID() + " has " + totalMatches + " horizontal matches.");
+        Debug.Log("Piece data " + this.GetInstanceID() + " has " + horizontalMatches.Count + " horizontal matches.");
+        // return totalMatches;
+        return horizontalMatches.Count;
     }
+
+    public int FindVerticalMatches(GamePiece searchChainOrigin = null)
+    {
+        GamePiece tempData;
+
+        int totalMatches = 0;
+        Vector2 gridLocation = gameBoard.WorldPositionToGrid(originalPosition);
+        Vector2 originLocation = gridLocation;
+        if (searchChainOrigin)
+        {
+            originLocation = gameBoard.WorldPositionToGrid(searchChainOrigin.GetOriginalPosition());
+        }
+
+        verticalMatches.Clear();
+
+        foreach (Vector2 tempKey in gameBoard.GetAdjacentGridCoords(originalPosition))
+        {
+            // If a valid game piece exists at the adjacent grid coord, store its data
+            if (gameBoard.GridCoordToGamePiece(tempKey))
+            {
+                tempData = gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>();
+            }
+            else
+            {
+                // Debug.Log("Adjacent piece at: " + tempKey + " not found.");
+
+                return 0;
+            }
+
+
+            if (tempData.GetPieceType() == pieceType)
+            {
+                if (tempKey.y - gridLocation.y != 0)
+                {
+                    // Debug.Log("Piece data " + this.GetInstanceID() + " found a vertical match.");
+                    AddVerticalMatch(tempKey);
+                    if (originLocation != tempKey)
+                    {
+                        // Debug.Log("Check backtrack prevented.");
+                        totalMatches += tempData.FindVerticalMatches(this);
+                    } else { totalMatches++; }
+/*
+                    else if (searchChainOrigin && tempKey == gameBoard.WorldPositionToGrid(searchChainOrigin.GetOriginalPosition()))
+                    { 
+                        totalMatches++; 
+                    }
+*/
+                }
+            }
+        }
+        Debug.Log("Piece data " + this.GetInstanceID() + " has " + totalMatches + " vertical matches.");
+        return totalMatches;
+    }
+
+    public IEnumerator MatchMade()
+    {
+        yield return new WaitForFixedUpdate();
+
+        if (horizontalMatches.Count > 1)
+        {
+            // Debug
+            SetPieceType(PieceTypes.None);
+            foreach (Vector2 tempKey in horizontalMatches)
+            {
+                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().SetPieceType(PieceTypes.None);
+            }
+        }
+
+        if (verticalMatches.Count > 1)
+        {
+            // Debug
+            SetPieceType(PieceTypes.None);
+            foreach (Vector2 tempKey in horizontalMatches)
+            {
+                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().SetPieceType(PieceTypes.None);
+            }
+        }
+    }
+
+/*
+    public int FindMatches(GamePiece searchChainOrigin = null)
+    {
+        GamePiece tempData;
+
+        int totalMatches = 0;
+        Vector2 gridLocation = gameBoard.WorldPositionToGrid(originalPosition);
+
+        foreach (Vector2 tempKey in gameBoard.GetAdjacentGridCoords(originalPosition))
+        {
+            // If a valid game piece exists at the adjacent grid coord, store its data
+            if (gameBoard.GridCoordToGamePiece(tempKey))
+            {
+                tempData = gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>();
+            }
+            else
+            {
+                // Debug.Log("Adjacent piece at: " + tempKey + " not found.");
+
+                return 0;
+            }
+
+
+            if (tempData.GetPieceType() == pieceType)
+            {
+                totalMatches++;
+                if (tempKey.y - gridLocation.y == 0)
+                {
+                    // Debug.Log("Piece data " + this.GetInstanceID() + " found a horizontal match.");
+                    AddHorizontalMatch(tempKey);
+                    if (!searchChainOrigin || tempKey != gameBoard.WorldPositionToGrid(searchChainOrigin.GetOriginalPosition()))
+                    {
+                        // Debug.Log("Check backtrack prevented.");
+                        totalMatches += tempData.FindMatches(this);
+                    }
+                }
+                else
+                {
+                    // Debug.Log("Piece data " + this.GetInstanceID() + " found a vertical match.");
+                    AddVerticalMatch(tempKey);
+                    if (!searchChainOrigin || tempKey != gameBoard.WorldPositionToGrid(searchChainOrigin.GetOriginalPosition()))
+                    {
+                        // Debug.Log("Check backtrack prevented.");
+                        totalMatches += tempData.FindMatches(this);
+                    }
+                }
+            }
+        }
+        Debug.Log("Piece data " + this.GetInstanceID() + " has " + totalMatches + " total matches.");
+        return totalMatches;
+    }
+*/
 }

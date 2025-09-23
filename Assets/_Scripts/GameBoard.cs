@@ -115,11 +115,15 @@ public class GameBoard : MonoBehaviour
                             generatedPieces.Clear();
                             generatedPieces.Add(randomPieceType);
                             tempPieceData.SetPieceType(randomPieceType);
+
+                            // Debug.Log("Piece: " + tempPieceData.GetInstanceID() + " | Type: " + randomPieceType.ToString());
                         } 
                         else if (generatedPieces.LastIndexOf(randomPieceType) < 1)
                         {
                             generatedPieces.Add(randomPieceType);
                             tempPieceData.SetPieceType(randomPieceType);
+                            
+                            // Debug.Log("Piece: " + tempPieceData.GetInstanceID() + " | Type: " + randomPieceType.ToString());
                         } else
                         {
                             // Remove piece that would generate a match
@@ -131,7 +135,10 @@ public class GameBoard : MonoBehaviour
                             tempPieceData.SetPieceType(newRandomPiece);
                             // Re-add the piece that would have generated a match
                             potentialPieces.Add(randomPieceType);
+
+                            // Debug.Log("Piece: " + tempPieceData.GetInstanceID() + " | Type: " + newRandomPiece.ToString());
                         }
+                        
                 } else 
                 { 
                     Debug.LogError("Fatal: Piece data not found on game object."); 
@@ -145,10 +152,10 @@ public class GameBoard : MonoBehaviour
             }
         }
         // DEBUG_GAMEPIECES();
-        PopulateMatches();
+        // PopulateMatches();
         yield return null;
     }
-
+/*
     private void PopulateMatches()
     {
         foreach (GameObject gamePiece in gamePieces.Values)
@@ -156,7 +163,7 @@ public class GameBoard : MonoBehaviour
             gamePiece.GetComponent<GamePiece>().FindMatches();
         }
     }
-
+*/
     
     // Board Data
 

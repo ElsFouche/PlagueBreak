@@ -124,35 +124,47 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
         } else {
             board.SwapPieces(heldPieceData.GetOriginalPosition(), touchedPieceData.GetOriginalPosition());
-            
-            // Clear matches after the swap 
-            heldPieceData.ClearMatches();
-            touchedPieceData.ClearMatches();
+            Debug.Log("Pieces swapped.");
+            bool matchFound = false;
 
-            // Check for matches made from the swap
-            if (heldPieceData.FindMatches()) 
+            if (heldPieceData.FindHorizontalMatches() > 2)
             {
-                Debug.Log("Held piece matched!");
+                StartCoroutine(heldPieceData.MatchMade());
+                matchFound = true;
             }
 
-            if (touchedPieceData.FindMatches())
+            if (touchedPieceData.FindHorizontalMatches() > 2)
             {
-                Debug.Log("Swapped piece matched!");
+                StartCoroutine(touchedPieceData.MatchMade());
+                matchFound = true;
             }
 
-            // Find matches (both pieces) 
-            // 
-            // Run match checker on existing pairs 
-            // If no match, run Return Piece
-                
+            if (!matchFound)
+            {
+                board.SwapPieces(heldPieceData.GetOriginalPosition(), touchedPieceData.GetOriginalPosition());
+                Debug.Log("Pieces swapped back.");
+
+            }
+            // heldPieceData.FindMatches();
+            // touchedPieceData.FindMatches();
+            // StartCoroutine(heldPieceData.MatchMade());
+            // StartCoroutine(touchedPieceData.MatchMade());
+            /*
+                        // Check for matches made from the swap
+                        if (heldPieceData.FindHorizontalMatches() > 1 || heldPieceData.FindVerticalMatches() > 1) 
+                        {
+                            Debug.Log("Held piece matched!");
+                            heldPieceData.MatchMade();
+                        }
+
+                        if (touchedPieceData.FindHorizontalMatches() > 1 || touchedPieceData.FindVerticalMatches() > 1)
+                        {
+                            Debug.Log("Swapped piece matched!");
+                            touchedPieceData.MatchMade();
+                        }
+            */
+
         }
-        
-        // if same as the held piece, lerp held piece back to start 
-        // if different, check if valid match
-        // if not a valid match, lerp held piece back to start
-        // if valid match, lerp new piece to old piece location
-        // lerp held piece to new piece location
-        // perform match made logic (GameBoard)
     }
 
     /// <summary>
@@ -188,7 +200,7 @@ public class PlayerController : MonoBehaviour
             {
                 return temp;
             } else {
-                Debug.Log("Invalid game piece.");
+                // Debug.Log("Invalid game piece.");
                 return null;
             }
         } else {
