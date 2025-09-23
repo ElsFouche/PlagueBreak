@@ -127,13 +127,13 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Pieces swapped.");
             bool matchFound = false;
 
-            if (heldPieceData.FindHorizontalMatches() > 2)
+            if (heldPieceData.FindHorizontalMatches() > 2 || heldPieceData.FindVerticalMatches() > 2)
             {
                 StartCoroutine(heldPieceData.MatchMade());
                 matchFound = true;
             }
 
-            if (touchedPieceData.FindHorizontalMatches() > 2)
+            if (touchedPieceData.FindHorizontalMatches() > 2 || touchedPieceData.FindVerticalMatches() > 2)
             {
                 StartCoroutine(touchedPieceData.MatchMade());
                 matchFound = true;

@@ -282,7 +282,7 @@ public class GamePiece : MonoBehaviour
     {
         GamePiece tempData;
 
-        int totalMatches = 0;
+        // int totalMatches = 0;
         Vector2 gridLocation = gameBoard.WorldPositionToGrid(originalPosition);
         Vector2 originLocation = gridLocation;
         if (searchChainOrigin)
@@ -312,30 +312,39 @@ public class GamePiece : MonoBehaviour
                 if (tempKey.y - gridLocation.y != 0)
                 {
                     // Debug.Log("Piece data " + this.GetInstanceID() + " found a vertical match.");
-                    AddVerticalMatch(tempKey);
                     if (originLocation != tempKey)
                     {
                         // Debug.Log("Check backtrack prevented.");
-                        totalMatches += tempData.FindVerticalMatches(this);
-                    } else { totalMatches++; }
-/*
-                    else if (searchChainOrigin && tempKey == gameBoard.WorldPositionToGrid(searchChainOrigin.GetOriginalPosition()))
-                    { 
-                        totalMatches++; 
+                        // totalMatches += 
+                        tempData.FindVerticalMatches(this);
+                    } 
+                    // else { totalMatches++; }
+                    
+                    AddVerticalMatch(tempKey);
+                    foreach (Vector2 match in tempData.GetVerticalMatches())
+                    {
+                        AddVerticalMatch(match);
                     }
-*/
+                    /*
+                                        else if (searchChainOrigin && tempKey == gameBoard.WorldPositionToGrid(searchChainOrigin.GetOriginalPosition()))
+                                        { 
+                                            totalMatches++; 
+                                        }
+                    */
                 }
             }
         }
-        Debug.Log("Piece data " + this.GetInstanceID() + " has " + totalMatches + " vertical matches.");
-        return totalMatches;
+        // Debug.Log("Piece data " + this.GetInstanceID() + " has " + totalMatches + " vertical matches.");
+        Debug.Log("Piece data " + this.GetInstanceID() + " has " + verticalMatches.Count + " vertical matches.");
+        // return totalMatches;
+        return verticalMatches.Count;
     }
 
     public IEnumerator MatchMade()
     {
         yield return new WaitForFixedUpdate();
 
-        if (horizontalMatches.Count > 1)
+        if (horizontalMatches.Count > 2)
         {
             // Debug
             SetPieceType(PieceTypes.None);
@@ -345,11 +354,11 @@ public class GamePiece : MonoBehaviour
             }
         }
 
-        if (verticalMatches.Count > 1)
+        if (verticalMatches.Count > 2)
         {
             // Debug
             SetPieceType(PieceTypes.None);
-            foreach (Vector2 tempKey in horizontalMatches)
+            foreach (Vector2 tempKey in verticalMatches)
             {
                 gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().SetPieceType(PieceTypes.None);
             }
