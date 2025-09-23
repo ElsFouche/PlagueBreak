@@ -56,7 +56,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
     private void Update()
     {
         if (heldPiece != null && screenTouched.phase.IsInProgress())
@@ -127,43 +126,33 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Pieces swapped.");
             bool matchFound = false;
 
-            if (heldPieceData.FindHorizontalMatches() > 2 || heldPieceData.FindVerticalMatches() > 2)
+            if (heldPieceData.FindHorizontalMatches() > 2)
             {
-                StartCoroutine(heldPieceData.MatchMade());
                 matchFound = true;
             }
+            if (heldPieceData.FindVerticalMatches() > 2)
+            {
+                matchFound = true;
+            } 
+            
+            StartCoroutine(heldPieceData.MatchMade());
 
-            if (touchedPieceData.FindHorizontalMatches() > 2 || touchedPieceData.FindVerticalMatches() > 2)
+            if (touchedPieceData.FindHorizontalMatches() > 2)
             {
-                StartCoroutine(touchedPieceData.MatchMade());
                 matchFound = true;
             }
+            if (touchedPieceData.FindVerticalMatches() > 2)
+            {
+                matchFound = true;
+            }
+            
+            StartCoroutine(touchedPieceData.MatchMade());
 
             if (!matchFound)
             {
                 board.SwapPieces(heldPieceData.GetOriginalPosition(), touchedPieceData.GetOriginalPosition());
                 Debug.Log("Pieces swapped back.");
-
             }
-            // heldPieceData.FindMatches();
-            // touchedPieceData.FindMatches();
-            // StartCoroutine(heldPieceData.MatchMade());
-            // StartCoroutine(touchedPieceData.MatchMade());
-            /*
-                        // Check for matches made from the swap
-                        if (heldPieceData.FindHorizontalMatches() > 1 || heldPieceData.FindVerticalMatches() > 1) 
-                        {
-                            Debug.Log("Held piece matched!");
-                            heldPieceData.MatchMade();
-                        }
-
-                        if (touchedPieceData.FindHorizontalMatches() > 1 || touchedPieceData.FindVerticalMatches() > 1)
-                        {
-                            Debug.Log("Swapped piece matched!");
-                            touchedPieceData.MatchMade();
-                        }
-            */
-
         }
     }
 

@@ -152,18 +152,20 @@ public class GameBoard : MonoBehaviour
             }
         }
         // DEBUG_GAMEPIECES();
-        // PopulateMatches();
+        StartCoroutine(PopulateMatches());
         yield return null;
     }
-/*
-    private void PopulateMatches()
+
+    private IEnumerator PopulateMatches()
     {
         foreach (GameObject gamePiece in gamePieces.Values)
         {
-            gamePiece.GetComponent<GamePiece>().FindMatches();
+            gamePiece.GetComponent<GamePiece>().FindHorizontalMatches();
+            gamePiece.GetComponent<GamePiece>().FindVerticalMatches();
+            StartCoroutine(gamePiece.GetComponent<GamePiece>().MatchMade());
+            yield return new WaitForFixedUpdate();
         }
     }
-*/
     
     // Board Data
 
