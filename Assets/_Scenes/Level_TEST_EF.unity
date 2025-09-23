@@ -1614,8 +1614,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19fbf0451127c83449a5d761f7cb90fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  touchRadius: 1
-  validSwipeDistance: 1
 --- !u!4 &1781714266
 Transform:
   m_ObjectHideFlags: 0
