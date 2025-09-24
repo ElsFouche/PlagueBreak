@@ -1349,7 +1349,7 @@ GameObject:
   - component: {fileID: 1381450604}
   m_Layer: 0
   m_Name: EnemySystem
-  m_TagString: Untagged
+  m_TagString: EnemySystem
   m_Icon: {fileID: -1412012063857583412, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1366,7 +1366,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c911837b47aeecf4da96bd9697319ec0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numWaves: 1
+  numWaves: 2
   spawnPoints:
   - {x: 1.32, y: 4.5, z: 0}
   - {x: 0, y: 5, z: 0}
@@ -1378,10 +1378,11 @@ MonoBehaviour:
     baseDamage: 3.1
     partOfWave: 1
   - enemyType: 1
-    baseHealth: 6.5
+    baseHealth: 12.8
     baseDamage: 1.8
     partOfWave: 1
   waveHealthBar: {fileID: 1894083113}
+  waveCount: {fileID: 1236043555}
   basicEnemies:
   - {fileID: 3533799413326569316, guid: 2adfe5f1f30b3cc4aa2bce5084dfbbbb, type: 3}
   - {fileID: 3533799413326569316, guid: 81a34a5c53ed3414989d4f2988d97dfc, type: 3}
@@ -1614,6 +1615,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19fbf0451127c83449a5d761f7cb90fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  damagePerMatch: 5
 --- !u!4 &1781714266
 Transform:
   m_ObjectHideFlags: 0
