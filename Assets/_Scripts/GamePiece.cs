@@ -172,7 +172,7 @@ public class GamePiece : MonoBehaviour
 
         foreach (Vector2 tempKey in gameBoard.GetAdjacentGridCoords(originalPosition))
         {
-            Debug.Log("Checking position: [" + tempKey.x + ", " + tempKey.y + "]");
+            // Debug.Log("Checking position: [" + tempKey.x + ", " + tempKey.y + "]");
             // If a valid game piece exists at the adjacent grid coord, store its data
             if (gameBoard.GridCoordToGamePiece(tempKey))
             {
@@ -181,7 +181,6 @@ public class GamePiece : MonoBehaviour
             else
             {
                 // Debug.Log("Adjacent piece at: " + tempKey + " not found.");
-
                 continue;
             }
 
@@ -206,7 +205,7 @@ public class GamePiece : MonoBehaviour
             }
         }
 
-        Debug.Log("Piece data " + this.GetInstanceID() + " has " + horizontalMatches.Count + " horizontal matches.");
+        // Debug.Log("Piece data " + this.GetInstanceID() + " has " + horizontalMatches.Count + " horizontal matches.");
         return horizontalMatches.Count;
     }
 
@@ -224,7 +223,8 @@ public class GamePiece : MonoBehaviour
 
         foreach (Vector2 tempKey in gameBoard.GetAdjacentGridCoords(originalPosition))
         {
-            Debug.Log("Checking position: [" + tempKey.x + ", " + tempKey.y + "]");
+            // Debug.Log("Checking position: [" + tempKey.x + ", " + tempKey.y + "]");
+            
             // If a valid game piece exists at the adjacent grid coord, store its data
             if (gameBoard.GridCoordToGamePiece(tempKey))
             {
@@ -233,7 +233,6 @@ public class GamePiece : MonoBehaviour
             else
             {
                 // Debug.Log("Adjacent piece at: " + tempKey + " not found.");
-
                 continue;
             }
 
@@ -258,7 +257,7 @@ public class GamePiece : MonoBehaviour
             }
         }
 
-        Debug.Log("Piece data " + this.GetInstanceID() + " has " + verticalMatches.Count + " vertical matches.");
+        // Debug.Log("Piece data " + this.GetInstanceID() + " has " + verticalMatches.Count + " vertical matches.");
         return verticalMatches.Count;
     }
 

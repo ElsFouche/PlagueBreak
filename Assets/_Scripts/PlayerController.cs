@@ -6,11 +6,10 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     // Public
-    /*
     [Header("Touch Settings")]
-    [SerializeField] 
-    private float touchRadius = 1.0f, validSwipeDistance = 1.0f;
-*/
+    [UnityEngine.Range(0f, 20f)]
+    [SerializeField]
+    private float damagePerMatch = 3.0f;
 
     // Private
     // Touch Data
@@ -23,6 +22,8 @@ public class PlayerController : MonoBehaviour
     private GameBoard board;
     private GameObject heldPiece;
     private GamePiece heldPieceData;
+    // Enemies
+    private EnemyHandler enemyHandler;
 
     private void Awake()
     {
@@ -49,10 +50,17 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         board = GameObject.FindGameObjectWithTag("GameBoard").GetComponent<GameBoard>();
-        if (board == null)
+        if (!board)
         {
-            Debug.Log("Game board not found. Are you sure you set up the scene correctly?");
-            Destroy(this);
+            Debug.Log("Fatal: Game board not found. Are you sure you set up the scene correctly?");
+            Application.Quit();
+        }
+
+        enemyHandler = GameObject.FindGameObjectWithTag("EnemySystem").GetComponent<EnemyHandler>();
+        if (!enemyHandler)
+        {
+            Debug.Log("Fatal: No enemy handler found. Are you sure you set up the scene correctly?");
+            Application.Quit();
         }
     }
 
@@ -81,6 +89,34 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="context"></param>
+    private void TouchEnded(InputAction.CallbackContext context)
+    {
+        if (heldPiece)
+        {
+            touchEndPos = GetFingerPosition();
+            GameObject touchedPiece = GetPieceTouched(touchEndPos);
+            GamePiece touchedPieceData;
+
+            // Check piece under finger
+            if (touchedPiece)
+            {
+                touchedPieceData = touchedPiece.GetComponent<GamePiece>();
+            }
+            else
+            {
+                Debug.Log("Invalid piece at end position.");
+                if (heldPieceData) StartCoroutine(heldPieceData.ReturnPiece());
+                return;
+            }
+
+            CheckMatchesAfterMove(touchedPieceData);
+        }
+    }
+
+    /// <summary>
     /// While holding a game piece:
     /// - Attempts to swap the piece at the end touch position
     ///   with the held piece.
@@ -88,72 +124,67 @@ public class PlayerController : MonoBehaviour
     ///   of the moved pieces. 
     /// - Scores if so, returns the pieces if not. 
     /// </summary>
-    /// <param name="context"></param>
-    private void TouchEnded(InputAction.CallbackContext context)
+    /// <param name="swappedPiece"></param>
+    private void CheckMatchesAfterMove(GamePiece swappedPiece)
     {
         if (!heldPiece) return;
 
-        touchEndPos = GetFingerPosition();
-        GameObject touchedPiece = GetPieceTouched(touchEndPos);
-        GamePiece touchedPieceData;
-
-        // Check piece under finger
-        if (touchedPiece != null)
-        {
-            touchedPieceData = touchedPiece.GetComponent<GamePiece>();
-        } else {
-            Debug.Log("Invalid piece at end position."); 
-            if (heldPieceData) StartCoroutine(heldPieceData.ReturnPiece());
-            return;
-        }
-
         bool isAdjacent = false;
-        
+
         // Check if touched piece is adjacent to our current location.
         foreach (var coord in board.GetAdjacentGridCoords(touchEndPos))
         {
             if (coord == board.WorldPositionToGrid(heldPieceData.GetOriginalPosition()))
             {
-                isAdjacent = true; break;
+                isAdjacent = true; 
+                break;
             }
         }
 
+        // If not adjacent, return the piece and exit. 
         if (!isAdjacent)
         {
             StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
-        } else {
-            board.SwapPieces(heldPieceData.GetOriginalPosition(), touchedPieceData.GetOriginalPosition());
-            Debug.Log("Pieces swapped.");
+        }
+        else
+        {
             bool matchFound = false;
+            int heldHorizontalMatches, heldVerticalMatches, touchedHorizontalMatches, touchedVerticalMatches;
 
-            if (heldPieceData.FindHorizontalMatches() > 2)
-            {
-                matchFound = true;
-            }
-            if (heldPieceData.FindVerticalMatches() > 2)
-            {
-                matchFound = true;
-            } 
-            
-            StartCoroutine(heldPieceData.MatchMade());
+            board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
+            // Debug.Log("Pieces swapped.");
 
-            if (touchedPieceData.FindHorizontalMatches() > 2)
+            heldHorizontalMatches = heldPieceData.FindHorizontalMatches();
+            heldVerticalMatches = heldPieceData.FindVerticalMatches();
+            StartCoroutine(heldPieceData.MatchMade()); // Checks number of matches internally
+
+            touchedHorizontalMatches = swappedPiece.FindHorizontalMatches();
+            touchedVerticalMatches = swappedPiece.FindVerticalMatches();
+            StartCoroutine(swappedPiece.MatchMade()); // Checks number of matches internally
+
+
+            if (heldHorizontalMatches > 2 || heldVerticalMatches > 2 ||
+                touchedHorizontalMatches > 2 || touchedVerticalMatches > 2)
             {
                 matchFound = true;
             }
-            if (touchedPieceData.FindVerticalMatches() > 2)
-            {
-                matchFound = true;
-            }
-            
-            StartCoroutine(touchedPieceData.MatchMade());
 
             if (!matchFound)
             {
-                board.SwapPieces(heldPieceData.GetOriginalPosition(), touchedPieceData.GetOriginalPosition());
-                Debug.Log("Pieces swapped back.");
+                board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
+                // Debug.Log("Pieces swapped back.");
             }
+
+            HarmEnemiesFromMatchCount(heldHorizontalMatches + heldVerticalMatches + touchedHorizontalMatches + touchedVerticalMatches);
         }
+    }
+
+    // Damage formula
+    // 5 is a magic number that should be controllable as part of the difficulty 
+    private void HarmEnemiesFromMatchCount(int matches)
+    {
+        float damage = (damagePerMatch + (float)((matches - F_GameSettings.PiecesInAMatch()) / 5));
+        enemyHandler.DealDamage(damage);
     }
 
     /// <summary>

@@ -105,6 +105,8 @@ public class GameBoard : MonoBehaviour
                         tempPieceData.SetNewRotation(tempGamePiece.transform.rotation);
                         tempPieceData.SetNewScale(tempGamePiece.transform.localScale);
                         tempPieceData.SetGameBoard(this);
+                        AssignPieceTypes(tempPieceData);
+                    /*
                     // Assign a pseudo-random piece type
                         // Generate a piece using a new random value. 
                         int rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
@@ -138,7 +140,7 @@ public class GameBoard : MonoBehaviour
 
                             // Debug.Log("Piece: " + tempPieceData.GetInstanceID() + " | Type: " + newRandomPiece.ToString());
                         }
-                        
+                    */    
                 } else 
                 { 
                     Debug.LogError("Fatal: Piece data not found on game object."); 
@@ -154,6 +156,58 @@ public class GameBoard : MonoBehaviour
         // DEBUG_GAMEPIECES();
         StartCoroutine(PopulateMatches());
         yield return null;
+    }
+
+    public void ResetBoard()
+    {
+        foreach (var piece in gamePieces.Values)
+        {
+            AssignPieceTypes(piece.GetComponent<GamePiece>());
+        }
+    }
+
+    private void AssignPieceTypes(GamePiece pieceData)
+    {
+        List<PieceTypes> generatedPieces = new();
+        List<PieceTypes> potentialPieces = new();
+        // potentialPieces = generatedPieces.Keys.ToList();
+        foreach (PieceTypes val in Enum.GetValues(typeof(PieceTypes)))
+        {
+            potentialPieces.Add(val);
+        }
+        potentialPieces.Remove(PieceTypes.None);
+        potentialPieces.Remove(PieceTypes.Powerup1);
+        potentialPieces.Remove(PieceTypes.Powerup2);
+        potentialPieces.Remove(PieceTypes.Powerup3);
+
+        // Assign a pseudo-random piece type
+        // Generate a piece using a new random value. 
+        int rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
+        PieceTypes randomPieceType = potentialPieces[rndIndex];
+
+        if (!generatedPieces.Contains(randomPieceType))
+        {
+            generatedPieces.Clear();
+            generatedPieces.Add(randomPieceType);
+            pieceData.SetPieceType(randomPieceType);
+        }
+        else if (generatedPieces.LastIndexOf(randomPieceType) < 1)
+        {
+            generatedPieces.Add(randomPieceType);
+            pieceData.SetPieceType(randomPieceType);
+        }
+        else
+        {
+            // Remove piece that would generate a match
+            potentialPieces.Remove(randomPieceType);
+            rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
+            PieceTypes newRandomPiece = potentialPieces[rndIndex];
+            generatedPieces.Clear();
+            generatedPieces.Add(newRandomPiece);
+            pieceData.SetPieceType(newRandomPiece);
+            // Re-add the piece that would have generated a match
+            potentialPieces.Add(randomPieceType);
+        }
     }
 
     private IEnumerator PopulateMatches()
