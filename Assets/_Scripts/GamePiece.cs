@@ -155,10 +155,12 @@ public class GamePiece : MonoBehaviour
     }
 
     /// <summary>
-    /// BUGGED
+    /// Recursively searches horizontally to find matches.
+    /// Will branch vertically if matches are found. 
+    /// Returns the grid positions of the matches found. 
     /// </summary>
     /// <returns></returns>
-    public int FindHorizontalMatches(GamePiece searchChainOrigin = null)
+    public List<Vector2> FindHorizontalMatches(GamePiece searchChainOrigin = null)
     {
         GamePiece tempData;
         Vector2 gridLocation = gameBoard.WorldPositionToGrid(originalPosition);
@@ -206,10 +208,17 @@ public class GamePiece : MonoBehaviour
         }
 
         // Debug.Log("Piece data " + this.GetInstanceID() + " has " + horizontalMatches.Count + " horizontal matches.");
-        return horizontalMatches.Count;
+        return horizontalMatches;
     }
 
-    public int FindVerticalMatches(GamePiece searchChainOrigin = null)
+    /// <summary>
+    /// Recursively searches vertically to find matches.
+    /// Will branch horizontally if matches are found. 
+    /// Returns the grid positions of the matches found. 
+    /// </summary>
+    /// <param name="searchChainOrigin"></param>
+    /// <returns></returns>
+    public List<Vector2> FindVerticalMatches(GamePiece searchChainOrigin = null)
     {
         GamePiece tempData;
         Vector2 gridLocation = gameBoard.WorldPositionToGrid(originalPosition);
@@ -258,7 +267,7 @@ public class GamePiece : MonoBehaviour
         }
 
         // Debug.Log("Piece data " + this.GetInstanceID() + " has " + verticalMatches.Count + " vertical matches.");
-        return verticalMatches.Count;
+        return verticalMatches;
     }
 
     public IEnumerator MatchMade()

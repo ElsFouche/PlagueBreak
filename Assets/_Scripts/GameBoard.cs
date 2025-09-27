@@ -20,6 +20,8 @@ public class GameBoard : MonoBehaviour
     [SerializeField] private float gamePieceWidth;
     [SerializeField] private float gamePieceHeight;
     [SerializeField] private GameObject gamePiece;
+    [SerializeField] private List<PieceTypes> potentialPieces = new();
+    private List<PieceTypes> generatedPieces = new();
 
     private Dictionary<Vector2, GameObject> gamePieces;
 
@@ -72,18 +74,6 @@ public class GameBoard : MonoBehaviour
     {
         GameObject tempGamePiece;
 
-        List<PieceTypes> generatedPieces = new();
-        List<PieceTypes> potentialPieces = new();
-        // potentialPieces = generatedPieces.Keys.ToList();
-        foreach (PieceTypes val in Enum.GetValues(typeof(PieceTypes)))
-        {
-            potentialPieces.Add(val);
-        }
-        potentialPieces.Remove(PieceTypes.None);
-        potentialPieces.Remove(PieceTypes.Powerup1);
-        potentialPieces.Remove(PieceTypes.Powerup2);
-        potentialPieces.Remove(PieceTypes.Powerup3);
-
         for (int row = 0; row < divisions; row++)
         {
             for (int col = 0; col < divisions; col++)
@@ -105,42 +95,7 @@ public class GameBoard : MonoBehaviour
                         tempPieceData.SetNewRotation(tempGamePiece.transform.rotation);
                         tempPieceData.SetNewScale(tempGamePiece.transform.localScale);
                         tempPieceData.SetGameBoard(this);
-                        AssignPieceTypes(tempPieceData);
-                    /*
-                    // Assign a pseudo-random piece type
-                        // Generate a piece using a new random value. 
-                        int rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
-                        PieceTypes randomPieceType = potentialPieces[rndIndex];
-
-                        if (!generatedPieces.Contains(randomPieceType))
-                        {
-                            generatedPieces.Clear();
-                            generatedPieces.Add(randomPieceType);
-                            tempPieceData.SetPieceType(randomPieceType);
-
-                            // Debug.Log("Piece: " + tempPieceData.GetInstanceID() + " | Type: " + randomPieceType.ToString());
-                        } 
-                        else if (generatedPieces.LastIndexOf(randomPieceType) < 1)
-                        {
-                            generatedPieces.Add(randomPieceType);
-                            tempPieceData.SetPieceType(randomPieceType);
-                            
-                            // Debug.Log("Piece: " + tempPieceData.GetInstanceID() + " | Type: " + randomPieceType.ToString());
-                        } else
-                        {
-                            // Remove piece that would generate a match
-                            potentialPieces.Remove(randomPieceType);
-                            rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
-                            PieceTypes newRandomPiece = potentialPieces[rndIndex];
-                            generatedPieces.Clear();
-                            generatedPieces.Add(newRandomPiece);
-                            tempPieceData.SetPieceType(newRandomPiece);
-                            // Re-add the piece that would have generated a match
-                            potentialPieces.Add(randomPieceType);
-
-                            // Debug.Log("Piece: " + tempPieceData.GetInstanceID() + " | Type: " + newRandomPiece.ToString());
-                        }
-                    */    
+                        AssignPieceType(tempPieceData); 
                 } else 
                 { 
                     Debug.LogError("Fatal: Piece data not found on game object."); 
@@ -162,52 +117,77 @@ public class GameBoard : MonoBehaviour
     {
         foreach (var piece in gamePieces.Values)
         {
-            AssignPieceTypes(piece.GetComponent<GamePiece>());
+            AssignPieceType(piece.GetComponent<GamePiece>());
         }
     }
 
-    private void AssignPieceTypes(GamePiece pieceData)
+    private void AssignPieceType(GamePiece pieceData)
     {
-        List<PieceTypes> generatedPieces = new();
-        List<PieceTypes> potentialPieces = new();
-        // potentialPieces = generatedPieces.Keys.ToList();
-        foreach (PieceTypes val in Enum.GetValues(typeof(PieceTypes)))
+        if (potentialPieces.Count < 1)
         {
-            potentialPieces.Add(val);
+            potentialPieces.Add(PieceTypes.Red);
+            Debug.Log("Piece types not set for the level. Remember to set up the game state completely!");
         }
-        potentialPieces.Remove(PieceTypes.None);
-        potentialPieces.Remove(PieceTypes.Powerup1);
-        potentialPieces.Remove(PieceTypes.Powerup2);
-        potentialPieces.Remove(PieceTypes.Powerup3);
 
         // Assign a pseudo-random piece type
         // Generate a piece using a new random value. 
         int rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
         PieceTypes randomPieceType = potentialPieces[rndIndex];
 
-        if (!generatedPieces.Contains(randomPieceType))
+        /*
+        /// The below functionality checks to ensure pieces are random
+        /// based on the historic placement of them. It has been dummied
+        /// out because it does not check vertical matches. However,
+        /// it is likely much more performant than the implemented solution.
+        /// As such, it has been left in case it proves necessary to refactor
+        /// to accomdate the performance requirements of the target devices. 
+                if (!generatedPieces.Contains(randomPieceType))
+                {
+                    generatedPieces.Clear();
+                    generatedPieces.Add(randomPieceType);
+                    pieceData.SetPieceType(randomPieceType);
+                }
+                else if (generatedPieces.LastIndexOf(randomPieceType) < 1)
+                {
+                    generatedPieces.Add(randomPieceType);
+                    pieceData.SetPieceType(randomPieceType);
+                }
+                else
+                {
+                    PieceTypes newRandomPiece = ScrambleMatchedPiece(randomPieceType);
+                    generatedPieces.Add(ScrambleMatchedPiece(newRandomPiece));
+                    pieceData.SetPieceType(newRandomPiece);
+                }
+        */
+
+        pieceData.SetPieceType(randomPieceType);
+
+        if (pieceData.FindHorizontalMatches().Count > 1)
         {
-            generatedPieces.Clear();
-            generatedPieces.Add(randomPieceType);
-            pieceData.SetPieceType(randomPieceType);
-        }
-        else if (generatedPieces.LastIndexOf(randomPieceType) < 1)
-        {
-            generatedPieces.Add(randomPieceType);
-            pieceData.SetPieceType(randomPieceType);
-        }
-        else
-        {
-            // Remove piece that would generate a match
-            potentialPieces.Remove(randomPieceType);
-            rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
-            PieceTypes newRandomPiece = potentialPieces[rndIndex];
-            generatedPieces.Clear();
-            generatedPieces.Add(newRandomPiece);
+            PieceTypes newRandomPiece = ScrambleMatchedPiece(pieceData.GetPieceType());
             pieceData.SetPieceType(newRandomPiece);
-            // Re-add the piece that would have generated a match
-            potentialPieces.Add(randomPieceType);
         }
+
+        if (pieceData.FindVerticalMatches().Count > 1)
+        {
+            PieceTypes newRandomPiece = ScrambleMatchedPiece(pieceData.GetPieceType());
+            pieceData.SetPieceType(newRandomPiece);
+        }
+    }
+
+    private PieceTypes ScrambleMatchedPiece(PieceTypes match)
+    {
+
+        // Remove piece that would generate a match
+        potentialPieces.Remove(match);
+        int rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
+        PieceTypes newRandomPiece = potentialPieces[rndIndex];
+        generatedPieces.Clear();
+        generatedPieces.Add(newRandomPiece);
+        // Re-add the piece that would have generated a match
+        potentialPieces.Add(match);
+
+        return newRandomPiece;
     }
 
     private IEnumerator PopulateMatches()

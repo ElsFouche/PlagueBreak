@@ -4,6 +4,8 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
+using Settings = F_GameSettings;
 
 /// <summary>
 /// Els Fouche
@@ -16,7 +18,7 @@ public class EnemyHandler : MonoBehaviour
 {
     // Designer 
     [Header("Enemy Stats")]
-    [Range(0.5f, 5.0f)]
+    [Range(0.5f, 20.0f)]
     [SerializeField] private float timeBetweenAttacks;
     [Header("Enemy Waves")]
     [SerializeField] private int numWaves = 1;
@@ -44,6 +46,9 @@ public class EnemyHandler : MonoBehaviour
     private GameBoard gameBoard;
     private PlayerController playerController;
 
+    // Coroutine Lockout
+    private bool CR_HarmPlayerRunning = false;
+    private bool CR_HarmPausedRunning = false;
 
     /// <summary>
     /// Debug gizmos to show enemy spawn locations.
@@ -197,8 +202,36 @@ public class EnemyHandler : MonoBehaviour
         }
     }
 
+    private void OnApplicationPause(bool pause)
+    {
+        PausePlayerHarm(pause);
+    }
+
+    public void PausePlayerHarm(bool pause)
+    {
+/*
+ * This is forcing the harm player coroutine to run twice. 
+        if (pause)
+        {
+            StartCoroutine(HarmPausedIndicator());
+        } else
+        {
+            StartCoroutine(HarmPlayer());
+        }
+        */
+    }
+
     private IEnumerator HarmPlayer()
     {
+        if (!CR_HarmPlayerRunning)
+        {
+            CR_HarmPlayerRunning = true;
+        }
+        else
+        {
+            yield return null;
+        } 
+
         // If no countdown UI, skip decrementing the and instead wait directly. 
         if (!countdownUI)
         {
@@ -206,8 +239,8 @@ public class EnemyHandler : MonoBehaviour
 
             playerController.TakeDamage(attackDamage);
 
+            CR_HarmPlayerRunning = false;
             StartCoroutine(HarmPlayer());
-
         } 
         else
         {
@@ -224,12 +257,58 @@ public class EnemyHandler : MonoBehaviour
 
             playerController.TakeDamage(attackDamage);
             countdownUI.fillAmount = 1.0f;
-            for (int i = 0; i < 6; i++)
-            {
-                yield return new WaitForSeconds(0.4f);
-                countdownUI.fillAmount = i % 2;
-            }
+
+            StartCoroutine(HarmPausedIndicator(Settings.playerISeconds));
+            yield return new WaitForSeconds(Settings.playerISeconds);
+            
+            CR_HarmPlayerRunning = false;
             StartCoroutine(HarmPlayer());
         }
+    }
+
+    /// <summary>
+    /// If called with a value above 0: Will blink the player damage timer 
+    /// for iSeconds seconds.
+    /// If called with no value or values 0 or below: Will blink until 
+    /// manually stopped. 
+    /// </summary>
+    /// <param name="iSeconds"></param>
+    /// <returns></returns>
+    private IEnumerator HarmPausedIndicator(float iSeconds = -1.0f)
+    {
+        if (!CR_HarmPausedRunning)
+        {
+            CR_HarmPausedRunning = true;
+        } else yield return null;
+
+        float timePaused = 0.0f;
+        int fillBlink = 0;
+
+        if (iSeconds > 0)
+        {
+            while (timePaused < iSeconds)
+            {
+                // Blink the UI
+                // Divide by expected frames per second.
+                fillBlink++;
+                countdownUI.fillAmount = (fillBlink / 60) % 2;
+                
+                // Increment time
+                yield return new WaitForEndOfFrame();
+                timePaused += Time.deltaTime;
+            }
+        } else
+        {
+            while (true)
+            {
+                fillBlink = (fillBlink + 1) % 2;
+                countdownUI.fillAmount = fillBlink;
+                yield return new WaitForEndOfFrame();
+            }
+        }
+
+        // reset UI
+        countdownUI.fillAmount = 1.0f;
+        CR_HarmPausedRunning = false;
     }
 }

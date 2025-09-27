@@ -164,12 +164,12 @@ public class PlayerController : MonoBehaviour
             board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
             // Debug.Log("Pieces swapped.");
 
-            heldHorizontalMatches = heldPieceData.FindHorizontalMatches();
-            heldVerticalMatches = heldPieceData.FindVerticalMatches();
+            heldHorizontalMatches = heldPieceData.FindHorizontalMatches().Count;
+            heldVerticalMatches = heldPieceData.FindVerticalMatches().Count;
             StartCoroutine(heldPieceData.MatchMade()); // Checks number of matches internally
 
-            touchedHorizontalMatches = swappedPiece.FindHorizontalMatches();
-            touchedVerticalMatches = swappedPiece.FindVerticalMatches();
+            touchedHorizontalMatches = swappedPiece.FindHorizontalMatches().Count;
+            touchedVerticalMatches = swappedPiece.FindVerticalMatches().Count;
             StartCoroutine(swappedPiece.MatchMade()); // Checks number of matches internally
 
 

@@ -628,7 +628,7 @@ GameObject:
   - component: {fileID: 365458654}
   - component: {fileID: 365458655}
   m_Layer: 0
-  m_Name: -----GameBoard-----
+  m_Name: GameBoard
   m_TagString: GameBoard
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -669,6 +669,7 @@ MonoBehaviour:
   gamePieceWidth: 0.5
   gamePieceHeight: 0.5
   gamePiece: {fileID: 8489439618648616055, guid: 366f201964094824fb96721261d907d5, type: 3}
+  potentialPieces: 01000000020000000300000004000000
 --- !u!1 &447275969
 GameObject:
   m_ObjectHideFlags: 0
@@ -843,7 +844,7 @@ GameObject:
   m_Component:
   - component: {fileID: 818164583}
   m_Layer: 0
-  m_Name: -----Environment-----
+  m_Name: Environment
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1391,7 +1392,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1274984820}
   m_Layer: 0
-  m_Name: -----UI-----
+  m_Name: UI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2095,9 +2096,9 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1698784974}
+  - {fileID: 1274984820}
   - {fileID: 818164583}
   - {fileID: 365458654}
-  - {fileID: 1274984820}
   - {fileID: 275245693}
   - {fileID: 1381450605}
   - {fileID: 1781714266}
