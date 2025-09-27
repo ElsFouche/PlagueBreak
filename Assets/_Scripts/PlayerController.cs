@@ -1,15 +1,18 @@
-using NUnit.Framework;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using Settings = F_GameSettings;
 
 public class PlayerController : MonoBehaviour
 {
     // Public
-    [Header("Touch Settings")]
-    [UnityEngine.Range(0f, 20f)]
+    [Header("Player Settings")]
+    [Range(0f, 10.0f)]
     [SerializeField]
     private float damagePerMatch = 3.0f;
+    [SerializeField]
+    private RectTransform playerHealthBar;
 
     // Private
     // Touch Data
@@ -24,7 +27,9 @@ public class PlayerController : MonoBehaviour
     private GamePiece heldPieceData;
     // Enemies
     private EnemyHandler enemyHandler;
-
+    // Player
+    private float playerHealth = Settings.playerHealthMax;
+    
     private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
@@ -35,6 +40,11 @@ public class PlayerController : MonoBehaviour
         }
         screenTouched = playerInput.actions["Main/ScreenTouched"];
         touchPosition = playerInput.actions["Main/TouchLocation"];
+
+        if (!playerHealthBar)
+        {
+            Debug.Log("No player health bar found.");
+        }
     }
     private void OnEnable()
     {
@@ -183,8 +193,28 @@ public class PlayerController : MonoBehaviour
     // 5 is a magic number that should be controllable as part of the difficulty 
     private void HarmEnemiesFromMatchCount(int matches)
     {
-        float damage = (damagePerMatch + (float)((matches - F_GameSettings.PiecesInAMatch()) / 5));
+        float damage = (damagePerMatch + (float)((matches - Settings.howManyInAMatch) / 5));
         enemyHandler.DealDamage(damage);
+    }
+
+    public void TakeDamage(float damage)
+    {
+        Debug.Log("Player damaged: " + damage);
+        playerHealth = Mathf.Clamp(playerHealth - damage, 0.0f, Settings.playerHealthMax);
+        UpdateHealthDisplay();
+        if (playerHealth <= 0.0f)
+        {
+            Debug.Log("Game over.");
+            SceneManager.LoadScene(sceneName: "GameOver");
+        }
+    }
+
+    private void UpdateHealthDisplay()
+    {
+        if (playerHealthBar)
+        {
+            playerHealthBar.localScale = new Vector3(playerHealth / Settings.playerHealthMax, 1.0f, 1.0f);
+        }
     }
 
     /// <summary>

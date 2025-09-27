@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Els Fouche
@@ -13,6 +15,9 @@ using UnityEngine;
 public class EnemyHandler : MonoBehaviour
 {
     // Designer 
+    [Header("Enemy Stats")]
+    [Range(0.5f, 5.0f)]
+    [SerializeField] private float timeBetweenAttacks;
     [Header("Enemy Waves")]
     [SerializeField] private int numWaves = 1;
     [SerializeField] private List<Vector3> spawnPoints  = new();
@@ -21,7 +26,7 @@ public class EnemyHandler : MonoBehaviour
 
     [SerializeField] private RectTransform waveHealthBar;
     [SerializeField] private TMP_Text waveCount;
-
+    [SerializeField] private Image countdownUI;
 
     [Header("Enemy Appearance")]
     [SerializeField] private List<GameObject> basicEnemies = new();
@@ -33,9 +38,11 @@ public class EnemyHandler : MonoBehaviour
     [HideInInspector] public float difficultyMod = 1;
     private float currWaveHealth;
     private float maxWaveHealth;
+    private float attackDamage;
     private int currWave = 1, enemiesInWave;
     private Dictionary<int, GameObject> spawnedEnemies = new();
     private GameBoard gameBoard;
+    private PlayerController playerController;
 
 
     /// <summary>
@@ -54,6 +61,18 @@ public class EnemyHandler : MonoBehaviour
     private void Start()
     {
         GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent<GameBoard>(out gameBoard);
+        if (!gameBoard)
+        {
+            Debug.Log("Fatal: No game board found. Are you sure you set up the scene correctly?");
+            Application.Quit();
+        }
+        GameObject.FindGameObjectWithTag("Player").TryGetComponent<PlayerController>(out playerController);
+        if (!playerController)
+        {
+            Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
+            Application.Quit();
+        }
+
         StartWave();
     }
 
@@ -64,6 +83,7 @@ public class EnemyHandler : MonoBehaviour
     {
         maxWaveHealth = WaveHealthTotal(difficultyMod);
         currWaveHealth = maxWaveHealth;
+        attackDamage = 0;
         int index = 0;
 
         UpdateHealthDisplay();
@@ -85,6 +105,10 @@ public class EnemyHandler : MonoBehaviour
             index++;
         }
         enemiesInWave = index;
+
+        WaveDamageTotal();
+
+        StartCoroutine(HarmPlayer());
     }
 
     private void NextWave()
@@ -137,6 +161,7 @@ public class EnemyHandler : MonoBehaviour
         } else
         {
             // Shop / game over / etc
+            Debug.Log("Wave complete.");
         }
     }
 
@@ -150,6 +175,14 @@ public class EnemyHandler : MonoBehaviour
         return waveHealthRunningTotal *= difficultyMod;
     }
 
+    private void WaveDamageTotal()
+    {
+        foreach (var enemy in enemies)
+        {
+            attackDamage += enemy.baseDamage;
+        }
+    }
+
     public void UpdateWaveCount(string text = "")
     {
         string waveText = "Wave: " + currWave + " / " + numWaves;
@@ -161,6 +194,42 @@ public class EnemyHandler : MonoBehaviour
         if (waveHealthBar)
         {
             waveHealthBar.localScale = new Vector3(currWaveHealth / maxWaveHealth, 1.0f, 1.0f);
+        }
+    }
+
+    private IEnumerator HarmPlayer()
+    {
+        // If no countdown UI, skip decrementing the and instead wait directly. 
+        if (!countdownUI)
+        {
+            yield return new WaitForSeconds(timeBetweenAttacks);
+
+            playerController.TakeDamage(attackDamage);
+
+            StartCoroutine(HarmPlayer());
+
+        } 
+        else
+        {
+            float updateFrequency = 0.01f;
+            while (countdownUI.fillAmount > 0)
+            {
+                // Time = timeBetweenAttacks
+                // Rate = D/T = 1/timeBetweenAttacks
+                // Distance = 1 (max fill amount) 
+                countdownUI.fillAmount = Mathf.Max(countdownUI.fillAmount - (updateFrequency / timeBetweenAttacks), 0.0f);
+
+                yield return new WaitForSeconds(updateFrequency);
+            }
+
+            playerController.TakeDamage(attackDamage);
+            countdownUI.fillAmount = 1.0f;
+            for (int i = 0; i < 6; i++)
+            {
+                yield return new WaitForSeconds(0.4f);
+                countdownUI.fillAmount = i % 2;
+            }
+            StartCoroutine(HarmPlayer());
         }
     }
 }
