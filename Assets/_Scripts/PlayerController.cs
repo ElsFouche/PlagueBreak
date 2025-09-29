@@ -35,7 +35,7 @@ public class PlayerController : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         if (playerInput == null)
         {
-            Debug.Log("Player input module not found.");
+            Debug.Log("Fatal: Player input module not found.");
             Destroy(this);
         }
         screenTouched = playerInput.actions["Main/ScreenTouched"];
@@ -71,6 +71,15 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("Fatal: No enemy handler found. Are you sure you set up the scene correctly?");
             Application.Quit();
+        }
+
+        // If no camera has been set, use the main camera. 
+        if (playerInput)
+        {
+            if (!playerInput.camera)
+            {
+                playerInput.camera = Camera.main;
+            }
         }
     }
 
