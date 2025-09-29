@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 using Settings = F_GameSettings;
@@ -28,7 +29,7 @@ public class EnemyHandler : MonoBehaviour
 
     [SerializeField] private RectTransform waveHealthBar;
     [SerializeField] private TMP_Text waveCount;
-    [SerializeField] private Image countdownUI;
+    [SerializeField] private Image timeToNextAttackUI;
 
     [Header("Enemy Appearance")]
     [SerializeField] private List<GameObject> basicEnemies = new();
@@ -160,13 +161,15 @@ public class EnemyHandler : MonoBehaviour
             spawnedEnemies.Remove(destroyEnemyAtIndex);
         }
 
+        Debug.Log("Enemies alive: " + spawnedEnemies.Count + "\nCurrent Wave: " + currWave);
+
         if (spawnedEnemies.Count == 0 && currWave < numWaves)
         {
             NextWave();
-        } else
-        {
+        } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) { 
             // Shop / game over / etc
             Debug.Log("Wave complete.");
+            SceneManager.LoadScene("VictoryScreen");
         }
     }
 
@@ -233,7 +236,7 @@ public class EnemyHandler : MonoBehaviour
         } 
 
         // If no countdown UI, skip decrementing the and instead wait directly. 
-        if (!countdownUI)
+        if (!timeToNextAttackUI)
         {
             yield return new WaitForSeconds(timeBetweenAttacks);
 
@@ -245,18 +248,18 @@ public class EnemyHandler : MonoBehaviour
         else
         {
             float updateFrequency = 0.01f;
-            while (countdownUI.fillAmount > 0)
+            while (timeToNextAttackUI.fillAmount > 0)
             {
                 // Time = timeBetweenAttacks
                 // Rate = D/T = 1/timeBetweenAttacks
                 // Distance = 1 (max fill amount) 
-                countdownUI.fillAmount = Mathf.Max(countdownUI.fillAmount - (updateFrequency / timeBetweenAttacks), 0.0f);
+                timeToNextAttackUI.fillAmount = Mathf.Max(timeToNextAttackUI.fillAmount - (updateFrequency / timeBetweenAttacks), 0.0f);
 
                 yield return new WaitForSeconds(updateFrequency);
             }
 
             playerController.TakeDamage(attackDamage);
-            countdownUI.fillAmount = 1.0f;
+            timeToNextAttackUI.fillAmount = 1.0f;
 
             StartCoroutine(HarmPausedIndicator(Settings.playerISeconds));
             yield return new WaitForSeconds(Settings.playerISeconds);
@@ -291,7 +294,7 @@ public class EnemyHandler : MonoBehaviour
                 // Blink the UI
                 // Divide by expected frames per second.
                 fillBlink++;
-                countdownUI.fillAmount = (fillBlink / 60) % 2;
+                timeToNextAttackUI.fillAmount = (fillBlink / 60) % 2;
                 
                 // Increment time
                 yield return new WaitForEndOfFrame();
@@ -302,13 +305,13 @@ public class EnemyHandler : MonoBehaviour
             while (true)
             {
                 fillBlink = (fillBlink + 1) % 2;
-                countdownUI.fillAmount = fillBlink;
+                timeToNextAttackUI.fillAmount = fillBlink;
                 yield return new WaitForEndOfFrame();
             }
         }
 
         // reset UI
-        countdownUI.fillAmount = 1.0f;
+        timeToNextAttackUI.fillAmount = 1.0f;
         CR_HarmPausedRunning = false;
     }
 }
