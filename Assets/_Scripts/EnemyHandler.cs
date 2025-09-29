@@ -69,13 +69,13 @@ public class EnemyHandler : MonoBehaviour
         GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent<GameBoard>(out gameBoard);
         if (!gameBoard)
         {
-            Debug.Log("Fatal: No game board found. Are you sure you set up the scene correctly?");
+            // Debug.Log("Fatal: No game board found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
         GameObject.FindGameObjectWithTag("Player").TryGetComponent<PlayerController>(out playerController);
         if (!playerController)
         {
-            Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
+            // Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
 
@@ -161,14 +161,12 @@ public class EnemyHandler : MonoBehaviour
             spawnedEnemies.Remove(destroyEnemyAtIndex);
         }
 
-        Debug.Log("Enemies alive: " + spawnedEnemies.Count + "\nCurrent Wave: " + currWave);
-
         if (spawnedEnemies.Count == 0 && currWave < numWaves)
         {
             NextWave();
         } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) { 
             // Shop / game over / etc
-            Debug.Log("Wave complete.");
+            // Debug.Log("Wave complete.");
             SceneManager.LoadScene("VictoryScreen");
         }
     }
