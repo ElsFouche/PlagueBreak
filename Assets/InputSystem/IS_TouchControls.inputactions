@@ -67,7 +67,7 @@
                     "name": "Submit",
                     "type": "Button",
                     "id": "52eb43ab-cc1e-46c3-b47b-416ac4a4f702",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -76,7 +76,7 @@
                     "name": "Cancel",
                     "type": "Button",
                     "id": "82086e10-c29b-4b44-bd64-791c7f8b085e",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -434,6 +434,17 @@
                 },
                 {
                     "name": "",
+                    "id": "c3b46a48-ed6e-41c1-b0ab-18f4b5b1ab8c",
+                    "path": "<AndroidGamepad>/{Back}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Cancel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "9beb5ef0-5f46-4876-8932-7cb0a6d852a8",
                     "path": "<Mouse>/position",
                     "interactions": "",
@@ -457,7 +468,7 @@
                 {
                     "name": "",
                     "id": "c3d0d945-cdd9-4fe3-a9af-0af74b2e738b",
-                    "path": "<Touchscreen>/touch*/position",
+                    "path": "<Touchscreen>/position",
                     "interactions": "",
                     "processors": "",
                     "groups": "Touch",
@@ -490,7 +501,7 @@
                 {
                     "name": "",
                     "id": "afdd33ef-a33c-45ba-9bb6-b79a2d69be5d",
-                    "path": "<Touchscreen>/touch*/press",
+                    "path": "<Touchscreen>/Press",
                     "interactions": "",
                     "processors": "",
                     "groups": "Touch",
