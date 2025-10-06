@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Settings = GameSettingsData;
+using Settings = F_GameSettings;
 
 public class TouchHandling : MonoBehaviour
 {
