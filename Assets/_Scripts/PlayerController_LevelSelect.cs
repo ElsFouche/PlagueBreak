@@ -1,6 +1,4 @@
 using System.Collections;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -42,27 +40,6 @@ public class PlayerController_LevelSelect : TouchHandling
 
     public void LevelIconTouched(LevelSelectButton level)
     {
-        // Debug.Log("Level: " + level);
-        Debug.Log("Level type: " + level.levelType);
-        Debug.Log("Level name: " + _menuHandlerScript.GetLevelFromLevelType(level.levelType).name);
-        Debug.Log("Scene manager Level_00 name: " + SceneManager.GetSceneByName("Level_00").name);
-        Debug.Log("Scene manager current level name: " + SceneManager.GetActiveScene().name);
-        StartCoroutine(WaitToStartLevel(_menuHandlerScript.GetAsyncOperation()));
-/*        
-        Scene levelSelected = _menuHandlerScript.GetLevelFromLevelType(level.levelType);
-        if (levelSelected.IsValid())
-        {
-            Debug.Log("Level Selected: " + levelSelected.name);
-        } else
-        {
-            Debug.Log("Selected level is invalid.");
-        }
-*/
-    }
-
-    public IEnumerator WaitToStartLevel(AsyncOperation asyncOp)
-    {
-        yield return new WaitForSeconds(2.0f);
-        asyncOp.allowSceneActivation = true;
+        _menuHandlerScript.LoadLevelFromLevelType(level.levelType);
     }
 }

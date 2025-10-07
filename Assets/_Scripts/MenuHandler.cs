@@ -1,9 +1,13 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class MenuHandler : MonoBehaviour
 {
     AsyncOperation asyncOp;
+    Scene currentScene;
+    Scene nextScene;
+    Coroutine asyncLevelOp = null;
 
     public void ChangeScene(int newScene)
     {
@@ -20,34 +24,54 @@ public class MenuHandler : MonoBehaviour
         Application.Quit();
     }
 
-    public Scene GetLevelFromLevelType(E_LevelType levelType)
+    public void LoadLevelFromLevelType(E_LevelType levelType)
     {
-        Scene currentScene = SceneManager.GetActiveScene();
+        currentScene = SceneManager.GetActiveScene();
+
+        if (asyncLevelOp != null)
+        {
+            return;
+        }
+
         switch (levelType)
         {
             case E_LevelType.None:
-                return currentScene;
+                break;
             case E_LevelType.Shop:
-                SceneManager.LoadScene("Level_Shop");
-                return SceneManager.GetSceneByName("Level_Shop");
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                break;
             case E_LevelType.Easy:
-                asyncOp = SceneManager.LoadSceneAsync("Level_00", LoadSceneMode.Additive);
-                asyncOp.allowSceneActivation = false;
-                return SceneManager.GetSceneByName("Level_00");
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                break;
             case E_LevelType.Normal:
-                SceneManager.LoadScene("Level_01");
-                return SceneManager.GetSceneByName("Level_01");
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                break;
             case E_LevelType.Hard:
-                return SceneManager.GetSceneByName("Level_02");
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                break;
             case E_LevelType.Boss:
-                return SceneManager.GetSceneByName("Level_03");
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                break;
             default:
-                return currentScene;
+                break;
         }
     }
 
-    public AsyncOperation GetAsyncOperation()
+    private IEnumerator LoadLevelAsync(string levelName)
     {
-        return asyncOp;
+        nextScene = SceneManager.GetSceneByName(levelName);
+        if (nextScene == null)
+        {
+            yield return null;
+        } else
+        {
+            asyncOp = SceneManager.LoadSceneAsync(levelName, LoadSceneMode.Additive);
+            // asyncOp.allowSceneActivation = true;
+            while (asyncOp.progress <= .9f)
+            {
+                yield return new WaitForEndOfFrame();
+            }
+            SceneManager.LoadScene(levelName);
+        }
     }
 }
