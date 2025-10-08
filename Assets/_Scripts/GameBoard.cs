@@ -90,7 +90,6 @@ public class GameBoard : MonoBehaviour
                 {
                     GamePiece tempPieceData = tempGamePiece.GetComponent<GamePiece>();
                     // Initialize basic data
-                        // tempPieceData.SetNewKey(new Vector2(row, col));
                         tempPieceData.SetNewPosition(tempGamePiece.transform.position);
                         tempPieceData.SetNewRotation(tempGamePiece.transform.rotation);
                         tempPieceData.SetNewScale(tempGamePiece.transform.localScale);
@@ -177,7 +176,6 @@ public class GameBoard : MonoBehaviour
 
     private PieceTypes ScrambleMatchedPiece(PieceTypes match)
     {
-
         // Remove piece that would generate a match
         potentialPieces.Remove(match);
         int rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
@@ -192,12 +190,14 @@ public class GameBoard : MonoBehaviour
 
     private IEnumerator PopulateMatches()
     {
-        foreach (GameObject gamePiece in gamePieces.Values)
+        List<GameObject> pieces = new List<GameObject>(gamePieces.Values); 
+
+        foreach (GameObject gamePiece in pieces)
         {
             gamePiece.GetComponent<GamePiece>().FindHorizontalMatches();
             gamePiece.GetComponent<GamePiece>().FindVerticalMatches();
             StartCoroutine(gamePiece.GetComponent<GamePiece>().MatchMade());
-            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();  
         }
     }
     
@@ -300,6 +300,7 @@ public class GameBoard : MonoBehaviour
     /// <summary>
     /// Swaps the game pieces at the input positions, if found.
     /// Returns true if successful. 
+    /// Input values must be world position, not grid space.
     /// </summary>
     /// <param name="pieceA"></param>
     /// <param name="pieceB"></param>
@@ -311,7 +312,7 @@ public class GameBoard : MonoBehaviour
         // Attempt to store game piece data based on input coordinates.
         GamePiece pieceAData = gamePieces[pieceA].GetComponent<GamePiece>();
         GamePiece pieceBData = gamePieces[pieceB].GetComponent<GamePiece>();
-        
+
         // Return valid game pieces if the other piece is not and exit.
         if (pieceAData == null)
         {
@@ -397,40 +398,6 @@ public class GameBoard : MonoBehaviour
 
         return true;
     }
-    /*
-        public void FindMatches()
-        {
-            // Check for matches
-            if (!pieceAData.FindMatches() && !pieceBData.FindMatches())
-            {
-
-            }
-            bool pieceAMatch = pieceAData.FindMatches();
-            bool pieceBMatch = pieceBData.FindMatches();
-
-
-
-            GameObject pieceAGameObject = gamePieces[pieceA];
-            // Update key to game piece association
-            gamePieces[pieceA] = gamePieces[pieceB];
-            gamePieces[pieceB] = pieceAGameObject;
-
-            // gamePieces[pieceA].
-
-            // setnewposition
-            // clearmatches
-            // if findmatches pieceA and findmatches pieceB are false, return both
-        }
-    */
-    /*
-        private void DEBUG_GAMEPIECES()
-        {
-            foreach (var gamePiece in gamePieces)
-            {
-                Debug.Log("Key: " + gamePiece.Key + "    |    Location: " +  gamePiece.Value.transform.position);
-            }
-        }
-    */
 }
 
 

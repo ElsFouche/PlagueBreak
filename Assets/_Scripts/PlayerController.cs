@@ -83,6 +83,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Update currently only handles simple piece movement. 
+    /// </summary>
     private void Update()
     {
         if (heldPiece != null && screenTouched.phase.IsInProgress())
@@ -108,7 +111,9 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// On finger up: 
+    /// - If holding a piece: requests that the swapped pieces check for matches.
+    /// - 
     /// </summary>
     /// <param name="context"></param>
     private void TouchEnded(InputAction.CallbackContext context)
@@ -164,14 +169,13 @@ public class PlayerController : MonoBehaviour
         if (!isAdjacent)
         {
             StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
+            return;
         }
         else
         {
-            bool matchFound = false;
             int heldHorizontalMatches, heldVerticalMatches, touchedHorizontalMatches, touchedVerticalMatches;
 
             board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
-            // Debug.Log("Pieces swapped.");
 
             heldHorizontalMatches = heldPieceData.FindHorizontalMatches().Count;
             heldVerticalMatches = heldPieceData.FindVerticalMatches().Count;
@@ -181,29 +185,33 @@ public class PlayerController : MonoBehaviour
             touchedVerticalMatches = swappedPiece.FindVerticalMatches().Count;
             StartCoroutine(swappedPiece.MatchMade()); // Checks number of matches internally
 
-
-            if (heldHorizontalMatches > 2 || heldVerticalMatches > 2 ||
-                touchedHorizontalMatches > 2 || touchedVerticalMatches > 2)
+            if (heldHorizontalMatches >= Settings.howManyInAMatch || heldVerticalMatches >= Settings.howManyInAMatch ||
+                touchedHorizontalMatches >= Settings.howManyInAMatch || touchedVerticalMatches >= Settings.howManyInAMatch)
             {
-                matchFound = true;
-            }
-
-            if (!matchFound)
+                // Determine the base damage from all the matches.
+                // Only count pieces beginning at the piece that made the match.
+                int damage = (Mathf.Max(heldHorizontalMatches - (Settings.howManyInAMatch - 1), 0) + 
+                              Mathf.Max(heldVerticalMatches - (Settings.howManyInAMatch - 1), 0) + 
+                              Mathf.Max(touchedVerticalMatches - (Settings.howManyInAMatch - 1), 0) + 
+                              Mathf.Max(touchedHorizontalMatches - (Settings.howManyInAMatch - 1), 0));
+                HarmEnemiesFromMatchCount(damage);
+            } else
             {
                 board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
                 // Debug.Log("Pieces swapped back.");
             }
-
-            HarmEnemiesFromMatchCount(heldHorizontalMatches + heldVerticalMatches + touchedHorizontalMatches + touchedVerticalMatches);
         }
     }
 
     // Damage formula
-    // 5 is a magic number that should be controllable as part of the difficulty 
     private void HarmEnemiesFromMatchCount(int matches)
     {
-        float damage = (damagePerMatch + (float)((matches - Settings.howManyInAMatch) / 5));
-        enemyHandler.DealDamage(damage);
+        // 5 is a magic number and should be expose to allow for designer control of the
+        // game's difficulty. Per the below formula, when the player reaches 5 matches they
+        // deal double damage. 
+        float finalDamage = (damagePerMatch * (float)(1.0f + ((matches - 1) / 5.0f)));
+        Debug.Log("Damage dealt: " + finalDamage);
+        enemyHandler.DealDamage(finalDamage);
     }
 
     public void TakeDamage(float damage)
