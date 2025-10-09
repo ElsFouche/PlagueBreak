@@ -29,6 +29,8 @@ public class PlayerController : MonoBehaviour
     private EnemyHandler enemyHandler;
     // Player
     private float playerHealth = Settings.playerHealthMax;
+    private bool bIsInvincible = false;
+    private Coroutine CR_InvincibleTimer = null;
     
     private void Awake()
     {
@@ -216,13 +218,32 @@ public class PlayerController : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        Debug.Log("Player damaged: " + damage);
-        playerHealth = Mathf.Clamp(playerHealth - damage, 0.0f, Settings.playerHealthMax);
-        UpdateHealthDisplay();
-        if (playerHealth <= 0.0f)
+        if (bIsInvincible)
         {
-            Debug.Log("Game over.");
-            SceneManager.LoadScene(sceneName: "GameOver");
+            Debug.Log("Player is invincible.");
+            return;
+        } else
+        {
+            Debug.Log("Player damaged: " + damage);
+            playerHealth = Mathf.Clamp(playerHealth - damage, 0.0f, Settings.playerHealthMax);
+            UpdateHealthDisplay();
+            if (playerHealth <= 0.0f)
+            {
+                Debug.Log("Game over.");
+                SceneManager.LoadScene(sceneName: "GameOver");
+            } else
+            {
+                if (CR_InvincibleTimer != null)
+                {
+                    StopCoroutine(CR_InvincibleTimer);
+                    CR_InvincibleTimer = StartCoroutine(InvincibleTimer(Settings.playerISeconds));
+                    bIsInvincible = true;
+                } else
+                {
+                    bIsInvincible = true;
+                    CR_InvincibleTimer = StartCoroutine(InvincibleTimer(Settings.playerISeconds));
+                }
+            }
         }
     }
 
@@ -274,6 +295,12 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Board script invalid.");
             return null;
         }
+    }
+
+    private IEnumerator InvincibleTimer(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        bIsInvincible = false;
     }
 
 
