@@ -5,7 +5,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 using Settings = F_GameSettings;
 
 /// <summary>
@@ -46,10 +45,11 @@ public class EnemyHandler : MonoBehaviour
     private Dictionary<int, GameObject> spawnedEnemies = new();
     private GameBoard gameBoard;
     private PlayerController playerController;
+        // Player harm loop settings
+    private float updateFrequency = 0.01f;
 
-    // Coroutine Lockout
-    private bool CR_HarmPlayerRunning = false;
-    private bool CR_HarmPausedRunning = false;
+    // Coroutines
+    private Coroutine CR_HarmPlayer = null;
 
     /// <summary>
     /// Debug gizmos to show enemy spawn locations.
@@ -114,7 +114,7 @@ public class EnemyHandler : MonoBehaviour
 
         WaveDamageTotal();
 
-        StartCoroutine(HarmPlayer());
+        StartPlayerHarmLoop();
     }
 
     private void NextWave()
@@ -123,6 +123,7 @@ public class EnemyHandler : MonoBehaviour
         currWave++;
         gameBoard.ResetBoard();
         UpdateWaveCount();
+        timeToNextAttackUI.fillAmount = 1.0f;
         StartWave();
     }
     
@@ -210,42 +211,51 @@ public class EnemyHandler : MonoBehaviour
 
     public void PausePlayerHarm(bool pause)
     {
-/*
- * This is forcing the harm player coroutine to run twice. 
         if (pause)
         {
-            StartCoroutine(HarmPausedIndicator());
+            if (CR_HarmPlayer != null)
+            {
+                StopCoroutine(CR_HarmPlayer);
+                CR_HarmPlayer = null;
+            }
         } else
         {
-            StartCoroutine(HarmPlayer());
+            StartPlayerHarmLoop();
         }
-        */
+    }
+
+    /// <summary>
+    /// Starts or restarts the damage loop coroutine.
+    /// </summary>
+    private void StartPlayerHarmLoop()
+    {
+        if (CR_HarmPlayer != null)
+        {
+            StopCoroutine(CR_HarmPlayer);
+            CR_HarmPlayer = StartCoroutine(HarmPlayer());
+        } else
+        {
+            CR_HarmPlayer = StartCoroutine(HarmPlayer());
+        }
     }
 
     private IEnumerator HarmPlayer()
-    {
-        if (!CR_HarmPlayerRunning)
-        {
-            CR_HarmPlayerRunning = true;
-        }
-        else
-        {
-            yield return null;
-        } 
-
+    { 
         // If no countdown UI, skip decrementing the and instead wait directly. 
         if (!timeToNextAttackUI)
         {
+            Debug.Log("No attack UI found. Are you sure you set up the scene correctly?");
+            yield return null;
+/*
             yield return new WaitForSeconds(timeBetweenAttacks);
 
             playerController.TakeDamage(attackDamage);
 
-            CR_HarmPlayerRunning = false;
             StartCoroutine(HarmPlayer());
+*/
         } 
         else
         {
-            float updateFrequency = 0.01f;
             while (timeToNextAttackUI.fillAmount > 0)
             {
                 // Time = timeBetweenAttacks
@@ -259,11 +269,8 @@ public class EnemyHandler : MonoBehaviour
             playerController.TakeDamage(attackDamage);
             timeToNextAttackUI.fillAmount = 1.0f;
 
+            // Pass control to harm paused
             StartCoroutine(HarmPausedIndicator(Settings.playerISeconds));
-            yield return new WaitForSeconds(Settings.playerISeconds);
-            
-            CR_HarmPlayerRunning = false;
-            StartCoroutine(HarmPlayer());
         }
     }
 
@@ -277,11 +284,6 @@ public class EnemyHandler : MonoBehaviour
     /// <returns></returns>
     private IEnumerator HarmPausedIndicator(float iSeconds = -1.0f)
     {
-        if (!CR_HarmPausedRunning)
-        {
-            CR_HarmPausedRunning = true;
-        } else yield return null;
-
         float timePaused = 0.0f;
         int fillBlink = 0;
 
@@ -310,6 +312,8 @@ public class EnemyHandler : MonoBehaviour
 
         // reset UI
         timeToNextAttackUI.fillAmount = 1.0f;
-        CR_HarmPausedRunning = false;
+
+        // Reinitialize player harm loop?
+        StartPlayerHarmLoop();
     }
 }
