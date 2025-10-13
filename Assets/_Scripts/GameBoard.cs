@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.Video;
 using PieceTypes = E_PieceTypes.PieceType;
 
 public class GameBoard : MonoBehaviour
@@ -12,12 +14,16 @@ public class GameBoard : MonoBehaviour
     
     // Private
     [Header("Board Settings")]
-    [SerializeField] private int width;
-    [SerializeField] private int height;
+    [Range(0.1f, 1.5f)]
+    [SerializeField] private float width;
+    [Range(0.1f, 1.5f)]
+    [SerializeField] private float height;
     [Range(2, 30)]
     [SerializeField] private int divisions;
     [Header("Game Piece Settings")]
+    [Range(0.1f, 1.0f)]
     [SerializeField] private float gamePieceWidth;
+    [Range(0.1f, 1.0f)]
     [SerializeField] private float gamePieceHeight;
     [SerializeField] private GameObject gamePiece;
     [SerializeField] private List<PieceTypes> potentialPieces = new();
@@ -37,9 +43,12 @@ public class GameBoard : MonoBehaviour
     private void OnDrawGizmos()
     {
         if (Application.isPlaying) return;
-        
+
+        // Debug.Log("Screen to world point width,height: " + Camera.main.ScreenToWorldPoint(new Vector3(width, height, 10.0f)));
+
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireCube(transform.position, new Vector3(width, height, 0.0f));
+        Gizmos.DrawWireCube(transform.position, new Vector3(Camera.main.orthographicSize * 2 * Camera.main.aspect * width,
+                                                            Camera.main.orthographicSize * 2 * Camera.main.aspect * height, 0.0f));
         for (int row = 0; row < divisions; row++)
         {
             for (int col = 0; col < divisions; col++)
@@ -50,7 +59,7 @@ public class GameBoard : MonoBehaviour
                     boardStartPosition.x + (col * cellSize.x) + (cellSize.x / 2), 
                     boardStartPosition.y + (row * cellSize.y) + (cellSize.y / 2),
                     transform.position.z), 
-                    new Vector3(gamePieceWidth, gamePieceHeight, 0.0f));
+                    new Vector3(gamePieceWidth*cellSize.x, gamePieceHeight*cellSize.y, 0.0f));
             }
         }
     }
@@ -83,7 +92,7 @@ public class GameBoard : MonoBehaviour
                                             boardStartPosition.y + (row * cellSize.y) + (cellSize.y / 2),
                                             transform.position.z),
                                             Quaternion.identity);
-                tempGamePiece.transform.localScale = new Vector3(gamePieceWidth, gamePieceHeight, (gamePieceWidth+gamePieceHeight)/2);
+                tempGamePiece.transform.localScale = new Vector3(gamePieceWidth*cellSize.x, gamePieceHeight*cellSize.y, (gamePieceWidth+gamePieceHeight)/2);
                 tempGamePiece.transform.parent = transform;
                 
                 if (tempGamePiece.GetComponent<GamePiece>() != null)
@@ -205,11 +214,11 @@ public class GameBoard : MonoBehaviour
 
     private Vector2 BoardStartPosition()
     {
-        return new Vector2(transform.position.x - (float)width / 2, transform.position.y - (float)height / 2);
+        return new Vector2((transform.position.x - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / 2), (transform.position.y - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / 2));
     }
     private Vector2 CellSize()
     {
-        return new Vector2((float)width / divisions, (float)height / divisions);
+        return new Vector2(Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / divisions, Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / divisions);
     }
 
     // Conversions
