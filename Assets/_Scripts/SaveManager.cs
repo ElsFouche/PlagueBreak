@@ -69,7 +69,7 @@ public class SaveManager : MonoBehaviour , ISaveLoad
     
     public void SaveData()
     {
-
+        
     }
 
     /// <summary>
