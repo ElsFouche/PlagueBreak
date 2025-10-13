@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using Settings = F_GameSettings;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, ISaveLoad
 {
     // Public
     [Header("Player Settings")]
@@ -31,6 +31,8 @@ public class PlayerController : MonoBehaviour
     private float playerHealth = Settings.playerHealthMax;
     private bool bIsInvincible = false;
     private Coroutine CR_InvincibleTimer = null;
+    // Save Info
+    private SaveData saveData;
     
     private void Awake()
     {
@@ -302,6 +304,22 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(seconds);
         bIsInvincible = false;
     }
+
+    // Interfaces
+        // ISaveLoad
+
+    public void SaveData()
+    {
+
+    }
+
+    public void LoadData(SaveData dataToLoad)
+    {
+        saveData = dataToLoad;
+        return;
+    }
+
+    public GameObject GetGameObject() { return this.gameObject; }
 
 
     // Debug
