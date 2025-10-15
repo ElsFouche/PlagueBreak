@@ -1,15 +1,19 @@
-using System.Collections;
+using System;
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
-public class PlayerController_LevelSelect : TouchHandling
+public class PlayerController_LevelSelect : TouchHandling , ISaveLoad
 {
     // Exposed
     [SerializeField] private GameObject playerIcon;
 
     // Private
-    private MenuHandler _menuHandlerScript;
+    private SceneHandler _sceneHandlerScript;
+    private List<Button> levelSelectButtons = new();
+    private SaveData saveData = new();
     
     new private void Awake()
     {
@@ -21,7 +25,12 @@ public class PlayerController_LevelSelect : TouchHandling
         }
 
         GameObject _menuHandlerObject = new GameObject("Menu Handler");
-        _menuHandlerScript = _menuHandlerObject.AddComponent<MenuHandler>();
+        _sceneHandlerScript = _menuHandlerObject.AddComponent<SceneHandler>();
+
+        foreach (var button in GameObject.FindGameObjectsWithTag("LevelSelectButton"))
+        {
+            levelSelectButtons.Add(button.GetComponent<Button>());
+        }
     }
 
     protected override void TouchStarted(InputAction.CallbackContext ctx)
@@ -40,6 +49,35 @@ public class PlayerController_LevelSelect : TouchHandling
 
     public void LevelIconTouched(LevelSelectButton level)
     {
-        _menuHandlerScript.LoadLevelFromLevelType(level.levelType);
+        _sceneHandlerScript.LoadLevelFromLevelType(level.levelType, level.ID);
     }
+
+    private void UpdateValidLevels()
+    {
+        foreach (var button in levelSelectButtons)
+        {
+            Guid levelID = button.GetComponent<LevelSelectButton>().ID;
+
+            if (saveData.completedLevels.ContainsKey(levelID) && saveData.completedLevels[levelID])
+            {
+                button.enabled = false;
+            }
+        }
+    }
+
+    // Interfaces
+      // ISaveLoad
+
+    public void SaveData()
+    {
+
+    }
+
+    public void OnDataLoaded(SaveData dataToLoad)
+    {
+        saveData = dataToLoad;
+        
+        UpdateValidLevels();
+    }
+    public GameObject GetGameObject() { return this.gameObject; }
 }

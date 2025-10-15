@@ -33,6 +33,9 @@ public class SaveManager : MonoBehaviour , ISaveLoad
     {
         // Allow the player to select from different profiles later.
         saveData = LoadFromFile(Settings.defaultProfileName);
+        LoadAllData();
+        Debug.Log("Data loaded from file.");
+        Debug.Log("Current level: " + saveData.currentLevel);
     }
 
     private SaveData LoadFromFile(string filename)
@@ -60,7 +63,7 @@ public class SaveManager : MonoBehaviour , ISaveLoad
     {
         foreach (var obj in ISaveLoadObjects)
         {
-            obj.LoadData(saveData);
+            obj.OnDataLoaded(saveData);
         }
     }
 
@@ -72,11 +75,8 @@ public class SaveManager : MonoBehaviour , ISaveLoad
         
     }
 
-    /// <summary>
-    /// This script does not implement LoadData.
-    /// </summary>
-    /// <param name="dataToLoad"></param>
-    public void LoadData(SaveData dataToLoad) { return; }
+    
+    public void OnDataLoaded(SaveData dataToLoad) { saveData = dataToLoad; }
     /// <summary>
     /// Returns the game object associated with this ISaveLoad instance.
     /// </summary>

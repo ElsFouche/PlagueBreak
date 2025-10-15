@@ -1,10 +1,12 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using Settings = F_GameSettings;
 
-public class PlayerController : MonoBehaviour, ISaveLoad
+public class PlayerController : MonoBehaviour
 {
     // Public
     [Header("Player Settings")]
@@ -32,7 +34,7 @@ public class PlayerController : MonoBehaviour, ISaveLoad
     private bool bIsInvincible = false;
     private Coroutine CR_InvincibleTimer = null;
     // Save Info
-    private SaveData saveData;
+    private SaveManager saveManager;
     
     private void Awake()
     {
@@ -48,6 +50,11 @@ public class PlayerController : MonoBehaviour, ISaveLoad
         if (!playerHealthBar)
         {
             Debug.Log("No player health bar found.");
+        }
+        
+        if (!GameObject.FindGameObjectWithTag("SaveSystem").TryGetComponent<SaveManager>(out SaveManager saveManager))
+        {
+            Debug.Log("No save system found. Saving will not be possible.");
         }
     }
     private void OnEnable()
@@ -77,12 +84,29 @@ public class PlayerController : MonoBehaviour, ISaveLoad
             Application.Quit();
         }
 
-        // If no camera has been set, use the main camera. 
         if (playerInput)
         {
+            // If no camera has been set, use the main camera. 
             if (!playerInput.camera)
             {
                 playerInput.camera = Camera.main;
+            }
+
+            // If no UI Input Module has been set, attempt to find it. 
+            if (!playerInput.uiInputModule)
+            {
+                GameObject eventSystem = GameObject.FindGameObjectWithTag("EventSystem");
+                if (!eventSystem)
+                {
+                    Debug.Log("Fatal: No event system in scene.");
+                    Application.Quit();
+                } else
+                {
+                    if (eventSystem.GetComponent<EnemyHandler>() != null)
+                    {
+                        playerInput.uiInputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
+                    }
+                }
             }
         }
     }
@@ -304,23 +328,6 @@ public class PlayerController : MonoBehaviour, ISaveLoad
         yield return new WaitForSeconds(seconds);
         bIsInvincible = false;
     }
-
-    // Interfaces
-        // ISaveLoad
-
-    public void SaveData()
-    {
-
-    }
-
-    public void LoadData(SaveData dataToLoad)
-    {
-        saveData = dataToLoad;
-        return;
-    }
-
-    public GameObject GetGameObject() { return this.gameObject; }
-
 
     // Debug
     private IEnumerator WigglePiece(GameObject piece)

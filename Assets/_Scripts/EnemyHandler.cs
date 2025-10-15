@@ -14,7 +14,7 @@ using Settings = F_GameSettings;
 /// It spawns enemies on wave start, assigning them a random mesh
 /// from the pool of available meshes, etc.
 /// </summary>
-public class EnemyHandler : MonoBehaviour
+public class EnemyHandler : MonoBehaviour , ISaveLoad
 {
     // Designer 
     [Header("Enemy Stats")]
@@ -45,9 +45,9 @@ public class EnemyHandler : MonoBehaviour
     private Dictionary<int, GameObject> spawnedEnemies = new();
     private GameBoard gameBoard;
     private PlayerController playerController;
+    private SaveData saveData = new();
         // Player harm loop settings
     private float updateFrequency = 0.01f;
-
     // Coroutines
     private Coroutine CR_HarmPlayer = null;
 
@@ -165,10 +165,13 @@ public class EnemyHandler : MonoBehaviour
         if (spawnedEnemies.Count == 0 && currWave < numWaves)
         {
             NextWave();
-        } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) { 
+        } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) {
             // Shop / game over / etc
             // Debug.Log("Wave complete.");
-            SceneManager.LoadScene("VictoryScreen");
+            saveData.completedLevels[saveData.currentLevel] = true;
+            SaveData();
+
+            SceneManager.LoadScene("LevelSelect");
         }
     }
 
@@ -316,4 +319,33 @@ public class EnemyHandler : MonoBehaviour
         // Reinitialize player harm loop?
         StartPlayerHarmLoop();
     }
+
+    // Interfaces
+      // ISaveLoad
+    
+    /// <summary>
+    /// This method updates the save manager with data from interface members.
+    /// </summary>
+    public void SaveData()
+    {
+        // Update all subscribers with updated data. 
+        foreach (var obj in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<ISaveLoad>().ToList())
+        {
+            obj.OnDataLoaded(saveData);
+        }
+    }
+    /// <summary>
+    /// This method is called in each interface member whenever data is loaded. 
+    /// </summary>
+    /// <param name="dataToLoad"></param>
+    
+    public void OnDataLoaded(SaveData dataToLoad)
+    {
+        saveData = dataToLoad;
+    }
+    /// <summary>
+    /// This method should always return a reference to the interface member. 
+    /// </summary>
+    /// <returns></returns>
+    public GameObject GetGameObject() { return this.gameObject; }
 }
