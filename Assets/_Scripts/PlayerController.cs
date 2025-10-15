@@ -56,6 +56,32 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("No save system found. Saving will not be possible.");
         }
+
+        if (playerInput)
+        {
+            // If no camera has been set, use the main camera. 
+            if (!playerInput.camera)
+            {
+                playerInput.camera = Camera.main;
+            }
+
+            // If no UI Input Module has been set, attempt to find it. 
+            if (!playerInput.uiInputModule)
+            {
+                GameObject eventSystem = GameObject.FindGameObjectWithTag("EventSystem");
+                if (!eventSystem)
+                {
+                    Debug.Log("Fatal: No event system in scene.");
+                    Application.Quit();
+                } else
+                {
+                    if (eventSystem.GetComponent<EnemyHandler>() != null)
+                    {
+                        playerInput.uiInputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
+                    }
+                }
+            }
+        }
     }
     private void OnEnable()
     {
@@ -82,32 +108,6 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("Fatal: No enemy handler found. Are you sure you set up the scene correctly?");
             Application.Quit();
-        }
-
-        if (playerInput)
-        {
-            // If no camera has been set, use the main camera. 
-            if (!playerInput.camera)
-            {
-                playerInput.camera = Camera.main;
-            }
-
-            // If no UI Input Module has been set, attempt to find it. 
-            if (!playerInput.uiInputModule)
-            {
-                GameObject eventSystem = GameObject.FindGameObjectWithTag("EventSystem");
-                if (!eventSystem)
-                {
-                    Debug.Log("Fatal: No event system in scene.");
-                    Application.Quit();
-                } else
-                {
-                    if (eventSystem.GetComponent<EnemyHandler>() != null)
-                    {
-                        playerInput.uiInputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
-                    }
-                }
-            }
         }
     }
 

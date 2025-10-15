@@ -1,12 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Settings = F_GameSettings;
 
-public class SaveManager : MonoBehaviour , ISaveLoad
+public class SaveManager : MonoBehaviour
 {
-    private SaveData saveData = new();
-    private List<ISaveLoad> ISaveLoadObjects = new();
+    public SaveData _SaveData = new();
 
     /// <summary>
     /// Finds all objects that need saved data,
@@ -15,14 +12,10 @@ public class SaveManager : MonoBehaviour , ISaveLoad
     /// </summary>
     private void Awake()
     {
-        ISaveLoadObjects = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<ISaveLoad>().ToList();
-        foreach (var obj in ISaveLoadObjects)
-        {
-            /*
-                Debug.Log(obj);
-                Debug.Log(obj.GetGameObject().name);
-            */
-        }
+        // Allow the player to select from different profiles later.
+        _SaveData = LoadFromFile(Settings.defaultProfileName);
+        Debug.Log("Data loaded from file.");
+        Debug.Log("Current level: " + _SaveData.currentLevel);
     }
 
     /// <summary>
@@ -31,14 +24,10 @@ public class SaveManager : MonoBehaviour , ISaveLoad
     /// </summary>
     private void Start()
     {
-        // Allow the player to select from different profiles later.
-        saveData = LoadFromFile(Settings.defaultProfileName);
-        LoadAllData();
-        Debug.Log("Data loaded from file.");
-        Debug.Log("Current level: " + saveData.currentLevel);
+
     }
 
-    private SaveData LoadFromFile(string filename)
+    public SaveData LoadFromFile(string filename)
     {
         if (System.IO.File.Exists(filename + ".json"))
         {
@@ -48,38 +37,24 @@ public class SaveManager : MonoBehaviour , ISaveLoad
         else
         {
             Debug.Log("No save data found, creating default.");
-            string json = JsonUtility.ToJson(saveData);
+            string json = JsonUtility.ToJson(_SaveData);
             Debug.Log(json);
             System.IO.File.WriteAllText(filename + ".json", json);
-            return saveData;
+            return _SaveData;
         }
     }
 
-    /// <summary>
-    /// Sends a message to all objects that implement ISaveData to
-    /// update their local persistent data with this object's data.
-    /// </summary>
-    private void LoadAllData()
+    public bool SaveToFile(string filename)
     {
-        foreach (var obj in ISaveLoadObjects)
+        if (System.IO.File.Exists(filename + ".json"))
         {
-            obj.OnDataLoaded(saveData);
+            string json = JsonUtility.ToJson(_SaveData);
+            System.IO.File.WriteAllText(filename + ".json", json);
+            return true;
+        } else
+        {
+            Debug.Log("No save file found at " + filename + ".json");
+            return false;
         }
     }
-
-    // Interfaces
-        // ISaveLoad
-    
-    public void SaveData()
-    {
-        
-    }
-
-    
-    public void OnDataLoaded(SaveData dataToLoad) { saveData = dataToLoad; }
-    /// <summary>
-    /// Returns the game object associated with this ISaveLoad instance.
-    /// </summary>
-    /// <returns></returns>
-    public GameObject GetGameObject() { return this.gameObject; }
 }

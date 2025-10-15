@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class PlayerController_LevelSelect : TouchHandling , ISaveLoad
+public class PlayerController_LevelSelect : TouchHandling
 {
     // Exposed
     [SerializeField] private GameObject playerIcon;
@@ -24,13 +24,16 @@ public class PlayerController_LevelSelect : TouchHandling , ISaveLoad
             playerIcon = new GameObject("PlaceholderPlayerIcon");
         }
 
-        GameObject _menuHandlerObject = new GameObject("Menu Handler");
-        _sceneHandlerScript = _menuHandlerObject.AddComponent<SceneHandler>();
-
+        if (!GameObject.FindWithTag("SceneHandler").TryGetComponent<SceneHandler>(out SceneHandler _sceneHandlerScript))
+        {
+            Debug.Log("No scene handler found.");
+        }
+/*
         foreach (var button in GameObject.FindGameObjectsWithTag("LevelSelectButton"))
         {
             levelSelectButtons.Add(button.GetComponent<Button>());
         }
+*/
     }
 
     protected override void TouchStarted(InputAction.CallbackContext ctx)
@@ -64,20 +67,4 @@ public class PlayerController_LevelSelect : TouchHandling , ISaveLoad
             }
         }
     }
-
-    // Interfaces
-      // ISaveLoad
-
-    public void SaveData()
-    {
-
-    }
-
-    public void OnDataLoaded(SaveData dataToLoad)
-    {
-        saveData = dataToLoad;
-        
-        UpdateValidLevels();
-    }
-    public GameObject GetGameObject() { return this.gameObject; }
 }
