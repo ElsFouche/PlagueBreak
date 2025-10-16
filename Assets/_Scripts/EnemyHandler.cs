@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ using Settings = F_GameSettings;
 /// It spawns enemies on wave start, assigning them a random mesh
 /// from the pool of available meshes, etc.
 /// </summary>
-public class EnemyHandler : MonoBehaviour
+public class EnemyHandler : MonoBehaviour , ISaveLoad
 {
     // Designer 
     [Header("Enemy Stats")]
@@ -44,11 +45,13 @@ public class EnemyHandler : MonoBehaviour
     private int currWave = 1, enemiesInWave;
     private Dictionary<int, GameObject> spawnedEnemies = new();
     private GameBoard gameBoard;
+        // Reference to player
     private PlayerController playerController;
+        // Data Management
+    private SaveData saveData = new();
         // Player harm loop settings
     private float updateFrequency = 0.01f;
-
-    // Coroutines
+        // Coroutine Lockouts
     private Coroutine CR_HarmPlayer = null;
 
     /// <summary>
@@ -66,18 +69,26 @@ public class EnemyHandler : MonoBehaviour
 
     private void Start()
     {
-        GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent<GameBoard>(out gameBoard);
-        if (!gameBoard)
+        if (GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent<GameBoard>(out GameBoard gb))
         {
-            // Debug.Log("Fatal: No game board found. Are you sure you set up the scene correctly?");
+            gameBoard = gb;
+        }
+        if (gameBoard == null)
+        {
+            Debug.Log("Fatal: No game board found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
-        GameObject.FindGameObjectWithTag("Player").TryGetComponent<PlayerController>(out playerController);
-        if (!playerController)
+        if (GameObject.FindGameObjectWithTag("Player").TryGetComponent<PlayerController>(out PlayerController pc))
         {
-            // Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
+            playerController = pc;
+        }
+        if (playerController == null)
+        {
+            Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
+
+        saveData = SaveManager.instance.GetSaveData();
 
         StartWave();
     }
@@ -103,7 +114,7 @@ public class EnemyHandler : MonoBehaviour
             {
                 spawnedEnemies.Add(index,
                     Instantiate(
-                    basicEnemies[Random.Range(0, basicEnemies.Count - 1)],
+                    basicEnemies[UnityEngine.Random.Range(0, basicEnemies.Count - 1)],
                     spawnPoint,
                     Quaternion.identity)
                     );
@@ -156,7 +167,7 @@ public class EnemyHandler : MonoBehaviour
             {
                 enemyIndices.Add(index);
             }
-            int destroyEnemyAtIndex = enemyIndices[Random.Range(0, enemyIndices.Count() - 1)];
+            int destroyEnemyAtIndex = enemyIndices[UnityEngine.Random.Range(0, enemyIndices.Count() - 1)];
 
             Destroy(spawnedEnemies[destroyEnemyAtIndex]);
             spawnedEnemies.Remove(destroyEnemyAtIndex);
@@ -165,11 +176,19 @@ public class EnemyHandler : MonoBehaviour
         if (spawnedEnemies.Count == 0 && currWave < numWaves)
         {
             NextWave();
-        } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) { 
-            // Shop / game over / etc
-            // Debug.Log("Wave complete.");
-            SceneManager.LoadScene("VictoryScreen");
+        } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) {
+            LevelComplete();
         }
+    }
+
+    private void LevelComplete()
+    {
+        Debug.Log("Level Complete!");
+        if (!saveData.completedLevels.Contains(saveData.currentLevel))
+        {
+            saveData.completedLevels.Add(saveData.currentLevel);
+        }
+        SceneHandler.instance.LoadLevelFromLevelType(E_LevelType.LevelSelect, "LevelSelect");
     }
 
     private float WaveHealthTotal(float modifier)
@@ -315,5 +334,24 @@ public class EnemyHandler : MonoBehaviour
 
         // Reinitialize player harm loop?
         StartPlayerHarmLoop();
+    }
+
+    // Interfaces
+      // ISaveLoad
+    /// <summary>
+    /// This method is called in each interface member whenever data is loaded. 
+    /// </summary>
+    /// <param name="dataToLoad"></param>
+    public void LoadData(SaveData dataToLoad)
+    {
+        saveData = dataToLoad;
+    }
+    /// <summary>
+    /// Update the save data object with local information. 
+    /// </summary>
+    public void SaveData(ref SaveData savedData)
+    {
+        // Update savedData with local info
+        // savedData.whatever = whatever new
     }
 }

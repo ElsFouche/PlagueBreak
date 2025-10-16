@@ -1,12 +1,22 @@
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using System.Linq;
 using Settings = F_GameSettings;
+using NUnit.Framework;
+using System.Collections.Generic;
+using Unity.VisualScripting;
+using System.Collections;
 
-public class SaveManager : MonoBehaviour , ISaveLoad
+public class SaveManager : MonoBehaviour
 {
-    private SaveData saveData = new();
-    private List<ISaveLoad> ISaveLoadObjects = new();
+    [Header("File Storage Configuration")]
+    [SerializeField] private string profileName;
+
+
+    private SaveData saveData;
+    private List<ISaveLoad> subscribers = new();
+    private SaveDataHandler dataHandler;
+
+    public static SaveManager instance { get; private set; }
 
     /// <summary>
     /// Finds all objects that need saved data,
@@ -15,71 +25,86 @@ public class SaveManager : MonoBehaviour , ISaveLoad
     /// </summary>
     private void Awake()
     {
-        ISaveLoadObjects = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<ISaveLoad>().ToList();
-        foreach (var obj in ISaveLoadObjects)
+        // Singleton garbage
+        if (instance != null)
         {
-            /*
-                Debug.Log(obj);
-                Debug.Log(obj.GetGameObject().name);
-            */
+            Destroy(this);
+        } else
+        {
+            instance = this;
+        }
+
+        // Allow for multiple save slots by adjusting this section:
+        if (profileName == null || profileName.Length < 1)
+        {
+            profileName = Settings.defaultProfileName;
         }
     }
 
-    /// <summary>
-    /// If the event system and/or main camera were not found,
-    /// assigns them to the player. 
-    /// </summary>
     private void Start()
     {
-        // Allow the player to select from different profiles later.
-        saveData = LoadFromFile(Settings.defaultProfileName);
+        this.dataHandler = new SaveDataHandler(Application.persistentDataPath, profileName);
+        this.subscribers = FindAllSubscribers();
+        LoadGame();
     }
 
-    private SaveData LoadFromFile(string filename)
+    private void OnApplicationQuit()
     {
-        if (System.IO.File.Exists(filename + ".json"))
+        this.subscribers.Clear();
+        this.subscribers = FindAllSubscribers();
+        SaveGame();
+    }
+
+    // Accessible Methods
+    public void NewGame()
+    {
+        this.saveData = new SaveData();
+    }
+
+    /// <summary>
+    /// Call this to load the game. 
+    /// </summary>
+    public void LoadGame()
+    {
+        // Load data from file using the data handler
+        this.saveData = dataHandler.LoadFromFile();
+
+        if (this.saveData == null)
         {
-            string json = System.IO.File.ReadAllText(filename + ".json");
-            return JsonUtility.FromJson<SaveData>(json);
+            NewGame();
         }
-        else
+
+        foreach (var sub in this.subscribers)
         {
-            Debug.Log("No save data found, creating default.");
-            string json = JsonUtility.ToJson(saveData);
-            Debug.Log(json);
-            System.IO.File.WriteAllText(filename + ".json", json);
-            return saveData;
+            sub.LoadData(this.saveData);
         }
     }
 
     /// <summary>
-    /// Sends a message to all objects that implement ISaveData to
-    /// update their local persistent data with this object's data.
+    /// Call this to save the game. 
     /// </summary>
-    private void LoadAllData()
+    public void SaveGame()
     {
-        foreach (var obj in ISaveLoadObjects)
+        if (this.subscribers.Count > 0)
         {
-            obj.LoadData(saveData);
+            foreach (var sub in this.subscribers)
+            {
+                sub.SaveData(ref this.saveData);
+            }
         }
+        dataHandler.SaveToFile(this.saveData);
     }
 
-    // Interfaces
-        // ISaveLoad
-    
-    public void SaveData()
+    public ref SaveData GetSaveData()
     {
-        
+        return ref this.saveData;
     }
 
-    /// <summary>
-    /// This script does not implement LoadData.
-    /// </summary>
-    /// <param name="dataToLoad"></param>
-    public void LoadData(SaveData dataToLoad) { return; }
-    /// <summary>
-    /// Returns the game object associated with this ISaveLoad instance.
-    /// </summary>
-    /// <returns></returns>
-    public GameObject GetGameObject() { return this.gameObject; }
+    private List<ISaveLoad> FindAllSubscribers()
+    {
+        IEnumerable<ISaveLoad> subscribersObjects = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, 
+                                                                                     FindObjectsSortMode.None)
+                                                                                     .OfType<ISaveLoad>();
+        return new List<ISaveLoad>(subscribersObjects);
+    }
 }

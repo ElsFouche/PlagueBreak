@@ -1,10 +1,13 @@
 using System.Collections;
+using UnityEditor.Overlays;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using Settings = F_GameSettings;
 
-public class PlayerController : MonoBehaviour, ISaveLoad
+public class PlayerController : MonoBehaviour , ISaveLoad
 {
     // Public
     [Header("Player Settings")]
@@ -49,6 +52,24 @@ public class PlayerController : MonoBehaviour, ISaveLoad
         {
             Debug.Log("No player health bar found.");
         }
+
+        if (playerInput)
+        {
+            // If no camera has been set, use the main camera. 
+            if (!playerInput.camera)
+            {
+                playerInput.camera = Camera.main;
+            }
+
+            // If no UI Input Module has been set, attempt to load it from the current event system. 
+            if (playerInput.uiInputModule == null)
+            {
+                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule playerInput))
+                {
+                    Debug.Log("Player UI input module loaded from current event system.");
+                }
+            }
+        }
     }
     private void OnEnable()
     {
@@ -75,15 +96,6 @@ public class PlayerController : MonoBehaviour, ISaveLoad
         {
             Debug.Log("Fatal: No enemy handler found. Are you sure you set up the scene correctly?");
             Application.Quit();
-        }
-
-        // If no camera has been set, use the main camera. 
-        if (playerInput)
-        {
-            if (!playerInput.camera)
-            {
-                playerInput.camera = Camera.main;
-            }
         }
     }
 
@@ -306,21 +318,23 @@ public class PlayerController : MonoBehaviour, ISaveLoad
     }
 
     // Interfaces
-        // ISaveLoad
-
-    public void SaveData()
-    {
-
-    }
-
+      // ISaveLoad
+    /// <summary>
+    /// This method is called in each interface member whenever data is loaded. 
+    /// </summary>
+    /// <param name="dataToLoad"></param>
     public void LoadData(SaveData dataToLoad)
     {
         saveData = dataToLoad;
-        return;
     }
-
-    public GameObject GetGameObject() { return this.gameObject; }
-
+    /// <summary>
+    /// Update the save data object with local information. 
+    /// </summary>
+    public void SaveData(ref SaveData savedData)
+    {
+        // Update savedData with local info
+        // savedData.whatever = whatever new
+    }
 
     // Debug
     private IEnumerator WigglePiece(GameObject piece)

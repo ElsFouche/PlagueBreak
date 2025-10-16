@@ -214,11 +214,13 @@ public class GameBoard : MonoBehaviour
 
     private Vector2 BoardStartPosition()
     {
-        return new Vector2((transform.position.x - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / 2), (transform.position.y - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / 2));
+        return new Vector2((transform.position.x - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / 2), 
+                           (transform.position.y - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / 2));
     }
     private Vector2 CellSize()
     {
-        return new Vector2(Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / divisions, Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / divisions);
+        return new Vector2(Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / divisions, 
+                           Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / divisions);
     }
 
     // Conversions

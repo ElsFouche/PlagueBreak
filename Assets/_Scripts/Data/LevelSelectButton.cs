@@ -1,3 +1,5 @@
+using System;
+using UnityEditor;
 using UnityEngine;
 
 /// <summary>
@@ -9,4 +11,5 @@ using UnityEngine;
 public class LevelSelectButton : MonoBehaviour
 {
     public E_LevelType levelType;
+    public string levelID;
 }
