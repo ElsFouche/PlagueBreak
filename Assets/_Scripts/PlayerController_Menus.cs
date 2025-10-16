@@ -5,15 +5,14 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class PlayerController_LevelSelect : TouchHandling
+public class PlayerController_Menus : TouchHandling
 {
     // Exposed
     [SerializeField] private GameObject playerIcon;
 
     // Private
-    private SceneHandler _sceneHandlerScript;
     private List<Button> levelSelectButtons = new();
-    private SaveData saveData = new();
+    private SaveData saveData;
     
     new private void Awake()
     {
@@ -23,17 +22,17 @@ public class PlayerController_LevelSelect : TouchHandling
             Debug.Log("Player icon not found.");
             playerIcon = new GameObject("PlaceholderPlayerIcon");
         }
-
-        if (!GameObject.FindWithTag("SceneHandler").TryGetComponent<SceneHandler>(out SceneHandler _sceneHandlerScript))
-        {
-            Debug.Log("No scene handler found.");
-        }
 /*
         foreach (var button in GameObject.FindGameObjectsWithTag("LevelSelectButton"))
         {
             levelSelectButtons.Add(button.GetComponent<Button>());
         }
 */
+    }
+
+    private void Start()
+    {
+        saveData = SaveManager.instance.GetSaveData();
     }
 
     protected override void TouchStarted(InputAction.CallbackContext ctx)
@@ -52,14 +51,20 @@ public class PlayerController_LevelSelect : TouchHandling
 
     public void LevelIconTouched(LevelSelectButton level)
     {
-        _sceneHandlerScript.LoadLevelFromLevelType(level.levelType, level.ID);
+        Debug.Log("Level selected: " + level.levelType.ToString());
+        SceneHandler.instance.LoadLevelFromLevelType(level.levelType, level.levelID);
+    }
+
+    public void ExitGame()
+    {
+        SceneHandler.instance.ExitGame();
     }
 
     private void UpdateValidLevels()
     {
         foreach (var button in levelSelectButtons)
         {
-            Guid levelID = button.GetComponent<LevelSelectButton>().ID;
+            string levelID = button.GetComponent<LevelSelectButton>().levelID;
 
             if (saveData.completedLevels.ContainsKey(levelID) && saveData.completedLevels[levelID])
             {

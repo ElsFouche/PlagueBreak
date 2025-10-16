@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,11 +45,13 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     private int currWave = 1, enemiesInWave;
     private Dictionary<int, GameObject> spawnedEnemies = new();
     private GameBoard gameBoard;
+        // Reference to player
     private PlayerController playerController;
+        // Data Management
     private SaveData saveData = new();
         // Player harm loop settings
     private float updateFrequency = 0.01f;
-    // Coroutines
+        // Coroutine Lockouts
     private Coroutine CR_HarmPlayer = null;
 
     /// <summary>
@@ -66,18 +69,26 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
     private void Start()
     {
-        GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent<GameBoard>(out gameBoard);
-        if (!gameBoard)
+        if (GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent<GameBoard>(out GameBoard gb))
         {
-            // Debug.Log("Fatal: No game board found. Are you sure you set up the scene correctly?");
+            gameBoard = gb;
+        }
+        if (gameBoard == null)
+        {
+            Debug.Log("Fatal: No game board found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
-        GameObject.FindGameObjectWithTag("Player").TryGetComponent<PlayerController>(out playerController);
-        if (!playerController)
+        if (GameObject.FindGameObjectWithTag("Player").TryGetComponent<PlayerController>(out PlayerController pc))
         {
-            // Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
+            playerController = pc;
+        }
+        if (playerController == null)
+        {
+            Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
+
+        saveData = SaveManager.instance.GetSaveData();
 
         StartWave();
     }
@@ -103,7 +114,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             {
                 spawnedEnemies.Add(index,
                     Instantiate(
-                    basicEnemies[Random.Range(0, basicEnemies.Count - 1)],
+                    basicEnemies[UnityEngine.Random.Range(0, basicEnemies.Count - 1)],
                     spawnPoint,
                     Quaternion.identity)
                     );
@@ -156,7 +167,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             {
                 enemyIndices.Add(index);
             }
-            int destroyEnemyAtIndex = enemyIndices[Random.Range(0, enemyIndices.Count() - 1)];
+            int destroyEnemyAtIndex = enemyIndices[UnityEngine.Random.Range(0, enemyIndices.Count() - 1)];
 
             Destroy(spawnedEnemies[destroyEnemyAtIndex]);
             spawnedEnemies.Remove(destroyEnemyAtIndex);
@@ -166,13 +177,15 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         {
             NextWave();
         } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) {
-            // Shop / game over / etc
-            // Debug.Log("Wave complete.");
-            saveData.completedLevels[saveData.currentLevel] = true;
-            SaveData();
-
-            SceneManager.LoadScene("LevelSelect");
+            LevelComplete();
         }
+    }
+
+    private void LevelComplete()
+    {
+        Debug.Log("Level Complete!");
+        saveData.completedLevels[saveData.currentLevel] = true;
+        SceneHandler.instance.LoadLevelFromLevelType(E_LevelType.LevelSelect, "LevelSelect");
     }
 
     private float WaveHealthTotal(float modifier)
@@ -322,30 +335,20 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
     // Interfaces
       // ISaveLoad
-    
-    /// <summary>
-    /// This method updates the save manager with data from interface members.
-    /// </summary>
-    public void SaveData()
-    {
-        // Update all subscribers with updated data. 
-        foreach (var obj in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<ISaveLoad>().ToList())
-        {
-            obj.OnDataLoaded(saveData);
-        }
-    }
     /// <summary>
     /// This method is called in each interface member whenever data is loaded. 
     /// </summary>
     /// <param name="dataToLoad"></param>
-    
-    public void OnDataLoaded(SaveData dataToLoad)
+    public void LoadData(SaveData dataToLoad)
     {
         saveData = dataToLoad;
     }
     /// <summary>
-    /// This method should always return a reference to the interface member. 
+    /// Update the save data object with local information. 
     /// </summary>
-    /// <returns></returns>
-    public GameObject GetGameObject() { return this.gameObject; }
+    public void SaveData(ref SaveData savedData)
+    {
+        // Update savedData with local info
+        // savedData.whatever = whatever new
+    }
 }

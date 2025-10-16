@@ -1,28 +1,31 @@
 using System;
 using System.Collections;
+using Unity.Properties;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Settings = F_GameSettings;
 
-public class SceneHandler : MonoBehaviour
+public class SceneHandler : MonoBehaviour, ISaveLoad
 {
-    AsyncOperation asyncOp;
+    AsyncOperation sceneLoadOp;
     Scene currentScene;
     Scene nextScene;
     Coroutine asyncLevelOp = null;
-    private SaveManager saveManager;
     private SaveData saveData;
+
+    public static SceneHandler instance { get; private set; }
 
     private void Awake()
     {
-        if (!GameObject.FindWithTag("SaveSystem").TryGetComponent<SaveManager>(out SaveManager saveManager))
+        // Singleton garbage
+        if (instance != null)
         {
-            Debug.Log("No save system found.");
-        } else
-        {
-            saveData = saveManager._SaveData;
+            Destroy(this);
         }
-
+        else
+        {
+            instance = this;
+        }
     }
 
     private void Start()
@@ -30,28 +33,22 @@ public class SceneHandler : MonoBehaviour
         if (!currentScene.isLoaded)
         {
             Debug.Log("No active scene, loading main menu.");
-            if (asyncOp != null)
+            if (asyncLevelOp != null)
             {
                 StopCoroutine(asyncLevelOp);
             }
             asyncLevelOp = StartCoroutine(LoadLevelAsync("MainMenu", false));
-
         }
+
+        saveData = SaveManager.instance.GetSaveData();
     }
 
     public void ExitGame()
     {
-        // save on exit
-        saveManager.SaveToFile(Settings.defaultProfileName);
-        StartCoroutine(Quitting());
-    }
-    private IEnumerator Quitting()
-    {
-        yield return new WaitForSeconds(0.2f);
         Application.Quit();
     }
 
-    private Scene GetCurrentScene()
+    public Scene GetCurrentScene()
     {
         for (int i = 0; i < SceneManager.sceneCount; i++)
         {
@@ -64,17 +61,18 @@ public class SceneHandler : MonoBehaviour
         return SceneManager.GetSceneByBuildIndex(0);
     }
 
-    private void SaveLevelGUID(Guid newSceneID)
+    public void SaveLevelGUID(string newLevelID)
     {
-        saveData.completedLevels.Add(newSceneID, false);
-        saveData.currentLevel = newSceneID;
-        Debug.Log("New scene id: " + newSceneID);
+        saveData.completedLevels.Add(newLevelID, false);
+        saveData.currentLevel = newLevelID;
+        Debug.Log("New scene id: " + newLevelID);
     }
 
-    public void LoadLevelFromLevelType(E_LevelType levelType, Guid newSceneID)
+    public void LoadLevelFromLevelType(E_LevelType levelType, string newLevelID)
     {
         if (asyncLevelOp != null)
         {
+            Debug.Log("Async level operation: " + asyncLevelOp + "\nis currently running. Unable to load.");
             return;
         }
 
@@ -86,19 +84,20 @@ public class SceneHandler : MonoBehaviour
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             case E_LevelType.Easy:
-                SaveLevelGUID(newSceneID);
+                SaveLevelGUID(newLevelID);
+                Debug.Log("Loading Level_00");
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             case E_LevelType.Normal:
-                SaveLevelGUID(newSceneID);
+                SaveLevelGUID(newLevelID);
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             case E_LevelType.Hard:
-                SaveLevelGUID(newSceneID);
+                SaveLevelGUID(newLevelID);
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             case E_LevelType.Boss:
-                SaveLevelGUID(newSceneID);
+                SaveLevelGUID(newLevelID);
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             default:
@@ -113,25 +112,45 @@ public class SceneHandler : MonoBehaviour
         
         if (nextScene == null)
         {
-            asyncOp = null;
+            asyncLevelOp = null;
             yield return null;
         } else
         {
-            asyncOp = SceneManager.LoadSceneAsync(levelName, LoadSceneMode.Additive);
+            sceneLoadOp = SceneManager.LoadSceneAsync(levelName, LoadSceneMode.Additive);
             
-            asyncOp.allowSceneActivation = false;
-            while (asyncOp.progress <= .85f)
+            sceneLoadOp.allowSceneActivation = false;
+            while (sceneLoadOp.progress <= .85f)
             {
                 yield return new WaitForEndOfFrame();
             }
-            asyncOp.allowSceneActivation = true;
+            sceneLoadOp.allowSceneActivation = true;
 
+            
             if (unloadPrevious)
             {
                 SceneManager.UnloadSceneAsync(currentScene);
             }
         }
+        asyncLevelOp = null;
         currentScene = GetCurrentScene();
-        asyncOp = null;
+    }
+
+    // Interfaces
+      // ISaveLoad
+    /// <summary>
+    /// This method is called in each interface member whenever data is loaded. 
+    /// </summary>
+    /// <param name="dataToLoad"></param>
+    public void LoadData(SaveData dataToLoad)
+    {
+        saveData = dataToLoad;
+    }
+    /// <summary>
+    /// Update the save data object with local information. 
+    /// </summary>
+    public void SaveData(ref SaveData savedData)
+    {
+        // Update savedData with local info
+        // savedData.whatever = whatever new
     }
 }

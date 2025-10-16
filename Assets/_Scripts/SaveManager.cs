@@ -1,9 +1,21 @@
 using UnityEngine;
+using System.Linq;
 using Settings = F_GameSettings;
+using NUnit.Framework;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 
 public class SaveManager : MonoBehaviour
 {
-    public SaveData _SaveData = new();
+    [Header("File Storage Configuration")]
+    [SerializeField] private string profileName;
+
+
+    private SaveData saveData;
+    private List<ISaveLoad> subscribers;
+    private SaveDataHandler dataHandler;
+
+    public static SaveManager instance { get; private set; }
 
     /// <summary>
     /// Finds all objects that need saved data,
@@ -12,49 +24,81 @@ public class SaveManager : MonoBehaviour
     /// </summary>
     private void Awake()
     {
-        // Allow the player to select from different profiles later.
-        _SaveData = LoadFromFile(Settings.defaultProfileName);
-        Debug.Log("Data loaded from file.");
-        Debug.Log("Current level: " + _SaveData.currentLevel);
+        // Singleton garbage
+        if (instance != null)
+        {
+            Destroy(this);
+        } else
+        {
+            instance = this;
+        }
+
+        // Allow for multiple save slots by adjusting this section:
+        if (profileName == null)
+        {
+            profileName = Settings.defaultProfileName;
+        }
+    }
+
+    private void Start()
+    {
+        this.dataHandler = new SaveDataHandler(Application.persistentDataPath, profileName);
+        this.subscribers = FindAllSubscribers();
+        LoadGame();
+    }
+
+    private void OnApplicationQuit()
+    {
+        SaveGame();
+    }
+
+
+    // Accessible Methods
+    public void NewGame()
+    {
+        this.saveData = new SaveData();
     }
 
     /// <summary>
-    /// If the event system and/or main camera were not found,
-    /// assigns them to the player. 
+    /// Call this to load the game. 
     /// </summary>
-    private void Start()
+    public void LoadGame()
     {
+        // Load data from file using the data handler
+        this.saveData = dataHandler.LoadFromFile();
 
-    }
-
-    public SaveData LoadFromFile(string filename)
-    {
-        if (System.IO.File.Exists(filename + ".json"))
+        if (this.saveData == null)
         {
-            string json = System.IO.File.ReadAllText(filename + ".json");
-            return JsonUtility.FromJson<SaveData>(json);
+            NewGame();
         }
-        else
+
+        foreach (var sub in this.subscribers)
         {
-            Debug.Log("No save data found, creating default.");
-            string json = JsonUtility.ToJson(_SaveData);
-            Debug.Log(json);
-            System.IO.File.WriteAllText(filename + ".json", json);
-            return _SaveData;
+            sub.LoadData(this.saveData);
         }
     }
 
-    public bool SaveToFile(string filename)
+    /// <summary>
+    /// Call this to save the game. 
+    /// </summary>
+    public void SaveGame()
     {
-        if (System.IO.File.Exists(filename + ".json"))
+        foreach (var sub in this.subscribers)
         {
-            string json = JsonUtility.ToJson(_SaveData);
-            System.IO.File.WriteAllText(filename + ".json", json);
-            return true;
-        } else
-        {
-            Debug.Log("No save file found at " + filename + ".json");
-            return false;
+            sub.SaveData(ref this.saveData);
         }
+    }
+
+    public ref SaveData GetSaveData()
+    {
+        return ref this.saveData;
+    }
+
+    private List<ISaveLoad> FindAllSubscribers()
+    {
+        IEnumerable<ISaveLoad> subscribersObjects = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, 
+                                                                                     FindObjectsSortMode.None)
+                                                                                     .OfType<ISaveLoad>();
+        return new List<ISaveLoad>(subscribersObjects);
     }
 }

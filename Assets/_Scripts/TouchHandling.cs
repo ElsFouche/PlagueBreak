@@ -1,5 +1,7 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using Settings = F_GameSettings;
 
 public class TouchHandling : MonoBehaviour
@@ -24,6 +26,19 @@ public class TouchHandling : MonoBehaviour
         }
         screenTouched = playerInput.actions["Main/ScreenTouched"];
         touchPosition = playerInput.actions["Main/TouchLocation"];
+
+        if (playerInput.camera == null)
+        {
+            playerInput.camera = Camera.main;
+        }
+
+        if (playerInput.uiInputModule == null)
+        {
+            if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule playerInput))
+            {
+                Debug.Log("Player UI input module loaded from current event system.");
+            }
+        }
     }
 
     protected void OnEnable()

@@ -1,4 +1,5 @@
 using System.Collections;
+using UnityEditor.Overlays;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -6,7 +7,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using Settings = F_GameSettings;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour , ISaveLoad
 {
     // Public
     [Header("Player Settings")]
@@ -34,7 +35,7 @@ public class PlayerController : MonoBehaviour
     private bool bIsInvincible = false;
     private Coroutine CR_InvincibleTimer = null;
     // Save Info
-    private SaveManager saveManager;
+    private SaveData saveData;
     
     private void Awake()
     {
@@ -51,11 +52,6 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("No player health bar found.");
         }
-        
-        if (!GameObject.FindGameObjectWithTag("SaveSystem").TryGetComponent<SaveManager>(out SaveManager saveManager))
-        {
-            Debug.Log("No save system found. Saving will not be possible.");
-        }
 
         if (playerInput)
         {
@@ -65,20 +61,12 @@ public class PlayerController : MonoBehaviour
                 playerInput.camera = Camera.main;
             }
 
-            // If no UI Input Module has been set, attempt to find it. 
-            if (!playerInput.uiInputModule)
+            // If no UI Input Module has been set, attempt to load it from the current event system. 
+            if (playerInput.uiInputModule == null)
             {
-                GameObject eventSystem = GameObject.FindGameObjectWithTag("EventSystem");
-                if (!eventSystem)
+                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule playerInput))
                 {
-                    Debug.Log("Fatal: No event system in scene.");
-                    Application.Quit();
-                } else
-                {
-                    if (eventSystem.GetComponent<EnemyHandler>() != null)
-                    {
-                        playerInput.uiInputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
-                    }
+                    Debug.Log("Player UI input module loaded from current event system.");
                 }
             }
         }
@@ -327,6 +315,25 @@ public class PlayerController : MonoBehaviour
     {
         yield return new WaitForSeconds(seconds);
         bIsInvincible = false;
+    }
+
+    // Interfaces
+      // ISaveLoad
+    /// <summary>
+    /// This method is called in each interface member whenever data is loaded. 
+    /// </summary>
+    /// <param name="dataToLoad"></param>
+    public void LoadData(SaveData dataToLoad)
+    {
+        saveData = dataToLoad;
+    }
+    /// <summary>
+    /// Update the save data object with local information. 
+    /// </summary>
+    public void SaveData(ref SaveData savedData)
+    {
+        // Update savedData with local info
+        // savedData.whatever = whatever new
     }
 
     // Debug

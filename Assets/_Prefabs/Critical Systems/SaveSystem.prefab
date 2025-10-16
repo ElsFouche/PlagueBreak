@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3926670940447878468}
   - component: {fileID: -4946225822803818279}
+  - component: {fileID: 1359148188317231184}
   m_Layer: 0
   m_Name: SaveSystem
   m_TagString: SaveSystem
@@ -44,3 +45,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49ee03f5b34f00946aaeaf0f5070a57d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  profileName: 
+--- !u!114 &1359148188317231184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5494520928962501065}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4da3b2e689e9ff47962821313937fe9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  persistAcrossScenes: 1

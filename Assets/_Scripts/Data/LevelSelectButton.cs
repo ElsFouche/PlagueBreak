@@ -11,10 +11,5 @@ using UnityEngine;
 public class LevelSelectButton : MonoBehaviour
 {
     public E_LevelType levelType;
-    public Guid ID;
-
-    public LevelSelectButton()
-    {
-        ID = Guid.NewGuid();
-    }
+    public string levelID;
 }
