@@ -22,24 +22,25 @@ public class PlayerController_Menus : TouchHandling
             Debug.Log("Player icon not found.");
             playerIcon = new GameObject("PlaceholderPlayerIcon");
         }
-/*
-        foreach (var button in GameObject.FindGameObjectsWithTag("LevelSelectButton"))
-        {
-            levelSelectButtons.Add(button.GetComponent<Button>());
-        }
-*/
     }
 
     private void Start()
     {
         saveData = SaveManager.instance.GetSaveData();
+        levelSelectButtons.Clear();
+
+        foreach (var button in GameObject.FindGameObjectsWithTag("LevelSelectButton"))
+        {
+            levelSelectButtons.Add(button.GetComponent<Button>());
+        }
+
+        UpdateValidLevels();
     }
 
     protected override void TouchStarted(InputAction.CallbackContext ctx)
     {
         base.TouchStarted(ctx);
         // Add functionality to TouchStarted
-        // Debug.Log("Touch start position: " + touchStartPos);
         playerIcon.transform.position = playerInput.camera.WorldToScreenPoint(touchStartPos);
     }
 
@@ -62,13 +63,14 @@ public class PlayerController_Menus : TouchHandling
 
     private void UpdateValidLevels()
     {
+        saveData = SaveManager.instance.GetSaveData();
         foreach (var button in levelSelectButtons)
         {
             string levelID = button.GetComponent<LevelSelectButton>().levelID;
 
-            if (saveData.completedLevels.ContainsKey(levelID) && saveData.completedLevels[levelID])
+            if (saveData.completedLevels.Contains(levelID))
             {
-                button.enabled = false;
+                button.interactable = false;
             }
         }
     }

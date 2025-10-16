@@ -30,7 +30,7 @@ public class SaveDataHandler
     /// <returns></returns>
     public SaveData LoadFromFile()
     {
-        string fullPath = Path.Combine(directoryPath, profileName);
+        string fullPath = Path.Combine(directoryPath, profileName + ".json");
         SaveData loadedData = null;
 
         if (File.Exists(fullPath))
@@ -63,7 +63,7 @@ public class SaveDataHandler
     /// <returns></returns>
     public SaveData LoadFromFile(string otherProfile)
     {
-        string fullPath = Path.Combine(directoryPath, otherProfile);
+        string fullPath = Path.Combine(directoryPath, otherProfile + ".json");
         SaveData loadedData = null;
 
         if (File.Exists(fullPath))
@@ -99,7 +99,8 @@ public class SaveDataHandler
     /// <returns></returns>
     public void SaveToFile(SaveData saveData)
     {
-        string fullPath = Path.Combine(directoryPath, profileName);
+        string fullPath = Path.Combine(directoryPath, profileName + ".json");
+        Debug.Log("Saving game to: " + fullPath);
 
         try
         {

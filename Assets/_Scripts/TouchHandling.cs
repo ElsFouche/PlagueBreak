@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -36,9 +37,11 @@ public class TouchHandling : MonoBehaviour
         {
             if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule playerInput))
             {
+                this.playerInput.uiInputModule = playerInput;
                 Debug.Log("Player UI input module loaded from current event system.");
             }
         }
+        StartCoroutine(PostStart());
     }
 
     protected void OnEnable()
@@ -52,16 +55,31 @@ public class TouchHandling : MonoBehaviour
         screenTouched.canceled -= TouchEnded;
     }
 
-    private void Start()
+    private IEnumerator PostStart()
     {
+        yield return new WaitForEndOfFrame();
+
         // If no camera has been set, use the main camera. 
         if (playerInput)
         {
-            if (!playerInput.camera)
+            if (playerInput.camera == null)
             {
                 playerInput.camera = Camera.main;
             }
+
+            if (playerInput.uiInputModule == null)
+            {
+                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule playerInput))
+                {
+                    this.playerInput.uiInputModule = playerInput;
+                    Debug.Log("Player UI input module loaded from current event system.");
+                }
+            }
         }
+
+        Debug.Log("Player Input: " + playerInput.name);
+        Debug.Log("Player Camera: " + playerInput.camera.name);
+        Debug.Log("Player UI Input Module: " + playerInput.uiInputModule.name);
     }
 
     /// <summary>

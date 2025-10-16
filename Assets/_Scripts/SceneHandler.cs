@@ -61,9 +61,8 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
         return SceneManager.GetSceneByBuildIndex(0);
     }
 
-    public void SaveLevelGUID(string newLevelID)
+    public void SaveLevelID(string newLevelID)
     {
-        saveData.completedLevels.Add(newLevelID, false);
         saveData.currentLevel = newLevelID;
         Debug.Log("New scene id: " + newLevelID);
     }
@@ -80,24 +79,31 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
         {
             case E_LevelType.None:
                 break;
+            case E_LevelType.Settings:
+                break;
             case E_LevelType.Shop:
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
+            case E_LevelType.SpecialShop:
+                break;
+            case E_LevelType.LevelSelect:
+                SaveLevelID(newLevelID);
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("LevelSelect"));
+                break;
             case E_LevelType.Easy:
-                SaveLevelGUID(newLevelID);
-                Debug.Log("Loading Level_00");
+                SaveLevelID(newLevelID);
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             case E_LevelType.Normal:
-                SaveLevelGUID(newLevelID);
+                SaveLevelID(newLevelID);
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             case E_LevelType.Hard:
-                SaveLevelGUID(newLevelID);
+                SaveLevelID(newLevelID);
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             case E_LevelType.Boss:
-                SaveLevelGUID(newLevelID);
+                SaveLevelID(newLevelID);
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             default:
@@ -107,11 +113,14 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
 
     private IEnumerator LoadLevelAsync(string levelName, bool unloadPrevious = true)
     {
-        Debug.Log("Loading scene: " +  levelName);
+        // Update our reference to the current scene.
+        currentScene = GetCurrentScene();
+        // Store a reference to the next scene. 
         nextScene = SceneManager.GetSceneByName(levelName);
         
         if (nextScene == null)
         {
+            Debug.LogError("The next scene is invalid: failed to load.");
             asyncLevelOp = null;
             yield return null;
         } else
@@ -123,16 +132,13 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
             {
                 yield return new WaitForEndOfFrame();
             }
-            sceneLoadOp.allowSceneActivation = true;
-
-            
             if (unloadPrevious)
             {
                 SceneManager.UnloadSceneAsync(currentScene);
             }
+            sceneLoadOp.allowSceneActivation = true;
         }
         asyncLevelOp = null;
-        currentScene = GetCurrentScene();
     }
 
     // Interfaces

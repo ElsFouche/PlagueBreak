@@ -184,7 +184,10 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     private void LevelComplete()
     {
         Debug.Log("Level Complete!");
-        saveData.completedLevels[saveData.currentLevel] = true;
+        if (!saveData.completedLevels.Contains(saveData.currentLevel))
+        {
+            saveData.completedLevels.Add(saveData.currentLevel);
+        }
         SceneHandler.instance.LoadLevelFromLevelType(E_LevelType.LevelSelect, "LevelSelect");
     }
 

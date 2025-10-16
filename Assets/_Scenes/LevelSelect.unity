@@ -203,8 +203,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6285858393173547481}
-        m_TargetAssemblyTypeName: PlayerController_LevelSelect, Assembly-CSharp
+      - m_Target: {fileID: 1332896218}
+        m_TargetAssemblyTypeName: PlayerController_Menus, Assembly-CSharp
         m_MethodName: LevelIconTouched
         m_Mode: 2
         m_Arguments:
@@ -426,8 +426,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6285858393173547481}
-        m_TargetAssemblyTypeName: PlayerController_LevelSelect, Assembly-CSharp
+      - m_Target: {fileID: 1332896218}
+        m_TargetAssemblyTypeName: PlayerController_Menus, Assembly-CSharp
         m_MethodName: LevelIconTouched
         m_Mode: 2
         m_Arguments:
@@ -975,8 +975,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6285858393173547481}
-        m_TargetAssemblyTypeName: PlayerController_LevelSelect, Assembly-CSharp
+      - m_Target: {fileID: 1332896218}
+        m_TargetAssemblyTypeName: PlayerController_Menus, Assembly-CSharp
         m_MethodName: LevelIconTouched
         m_Mode: 2
         m_Arguments:
@@ -2177,8 +2177,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6285858393173547481}
-        m_TargetAssemblyTypeName: PlayerController_LevelSelect, Assembly-CSharp
+      - m_Target: {fileID: 1332896218}
+        m_TargetAssemblyTypeName: PlayerController_Menus, Assembly-CSharp
         m_MethodName: LevelIconTouched
         m_Mode: 2
         m_Arguments:
@@ -2527,6 +2527,78 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1289882852}
   m_CullTransparentMesh: 1
+--- !u!1001 &1332896217
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1059025700092806627, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_Name
+      value: PlayerSystem_Menus
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1812150055044306715, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3467026170916857593, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+      propertyPath: playerIcon
+      value: 
+      objectReference: {fileID: 352643509}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+--- !u!114 &1332896218 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3467026170916857593, guid: d1e4c320d30f5564198427d9c510211f, type: 3}
+  m_PrefabInstance: {fileID: 1332896217}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da2d839ac658d2f408eee520538bfc9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1445787703
 GameObject:
   m_ObjectHideFlags: 0
@@ -2663,7 +2735,7 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.38247597, g: 0.4245283, b: 0.4144723, a: 1}
+    m_NormalColor: {r: 0.7164471, g: 0.9433962, b: 0.8980064, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -2685,7 +2757,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1450791093}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1332896218}
+        m_TargetAssemblyTypeName: PlayerController_Menus, Assembly-CSharp
+        m_MethodName: LevelIconTouched
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 1450791095}
+          m_ObjectArgumentAssemblyTypeName: LevelSelectButton, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1450791093
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3197,8 +3281,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6285858393173547481}
-        m_TargetAssemblyTypeName: PlayerController_LevelSelect, Assembly-CSharp
+      - m_Target: {fileID: 1332896218}
+        m_TargetAssemblyTypeName: PlayerController_Menus, Assembly-CSharp
         m_MethodName: LevelIconTouched
         m_Mode: 2
         m_Arguments:
@@ -3678,8 +3762,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 6285858393173547481}
-        m_TargetAssemblyTypeName: PlayerController_LevelSelect, Assembly-CSharp
+      - m_Target: {fileID: 1332896218}
+        m_TargetAssemblyTypeName: PlayerController_Menus, Assembly-CSharp
         m_MethodName: LevelIconTouched
         m_Mode: 2
         m_Arguments:
@@ -3742,85 +3826,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelType: 6
   levelID: Level_06
---- !u!114 &3384130446333539239
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6285858393173547480}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Actions: {fileID: -944628639613478452, guid: 0278b3bad3048494fa3605cde4725478, type: 3}
-  m_NotificationBehavior: 0
-  m_UIInputModule: {fileID: 0}
-  m_DeviceLostEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_DeviceRegainedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ControlsChangedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ActionEvents: []
-  m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
-  m_DefaultActionMap: Main
-  m_SplitScreenIndex: -1
-  m_Camera: {fileID: 0}
---- !u!4 &4971603146222337687
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6285858393173547480}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &6285858393173547480
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4971603146222337687}
-  - component: {fileID: 3384130446333539239}
-  - component: {fileID: 6285858393173547481}
-  m_Layer: 0
-  m_Name: PlayerSystem
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &6285858393173547481
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6285858393173547480}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: da2d839ac658d2f408eee520538bfc9f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerIcon: {fileID: 352643509}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 643294975}
-  - {fileID: 4971603146222337687}
+  - {fileID: 1332896217}

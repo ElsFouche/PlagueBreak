@@ -4,6 +4,7 @@ using Settings = F_GameSettings;
 using NUnit.Framework;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using System.Collections;
 
 public class SaveManager : MonoBehaviour
 {
@@ -12,7 +13,7 @@ public class SaveManager : MonoBehaviour
 
 
     private SaveData saveData;
-    private List<ISaveLoad> subscribers;
+    private List<ISaveLoad> subscribers = new();
     private SaveDataHandler dataHandler;
 
     public static SaveManager instance { get; private set; }
@@ -34,7 +35,7 @@ public class SaveManager : MonoBehaviour
         }
 
         // Allow for multiple save slots by adjusting this section:
-        if (profileName == null)
+        if (profileName == null || profileName.Length < 1)
         {
             profileName = Settings.defaultProfileName;
         }
@@ -49,9 +50,10 @@ public class SaveManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
+        this.subscribers.Clear();
+        this.subscribers = FindAllSubscribers();
         SaveGame();
     }
-
 
     // Accessible Methods
     public void NewGame()
@@ -83,10 +85,14 @@ public class SaveManager : MonoBehaviour
     /// </summary>
     public void SaveGame()
     {
-        foreach (var sub in this.subscribers)
+        if (this.subscribers.Count > 0)
         {
-            sub.SaveData(ref this.saveData);
+            foreach (var sub in this.subscribers)
+            {
+                sub.SaveData(ref this.saveData);
+            }
         }
+        dataHandler.SaveToFile(this.saveData);
     }
 
     public ref SaveData GetSaveData()

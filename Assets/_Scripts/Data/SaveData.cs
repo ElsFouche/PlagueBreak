@@ -6,12 +6,12 @@ using UnityEngine;
 [System.Serializable]
 public class SaveData
 {
-    public Dictionary<string, bool> completedLevels;
+    public List<string> completedLevels;
     public string currentLevel;
 
     public SaveData()
     {
-        completedLevels = new Dictionary<string, bool>();
+        completedLevels = new List<string> { "NULL" };
         currentLevel = "";
     }
 }
