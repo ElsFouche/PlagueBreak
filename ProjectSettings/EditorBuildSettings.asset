@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/_Scenes/LevelSelect.unity
     guid: dcc16ae4b89ba1746903b7a16d973ed7
   - enabled: 1
+    path: Assets/_Scenes/CrystalShop.unity
+    guid: b7c4c73e0e0f12e4090330ed18060148
+  - enabled: 1
     path: Assets/_Scenes/GameOver.unity
     guid: e65cc93f5d10e0e48804db886ad3f7ac
   - enabled: 1

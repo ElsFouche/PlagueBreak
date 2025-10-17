@@ -70,6 +70,10 @@ public class PlayerController : MonoBehaviour , ISaveLoad
                 }
             }
         }
+
+        saveData = SaveManager.instance.GetSaveData();
+        damagePerMatch *= (1 + ( (float)saveData.playerDamageBoost / 100) );
+        playerHealth *= (1 + ( (float)saveData.playerHealthBoost / 100) );
     }
     private void OnEnable()
     {

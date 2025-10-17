@@ -44,10 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 473331a656103ff4fb84bb25788a0a8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boardStartPosition: {x: -3, y: -3}
-  cellSize: {x: 0.75, y: 0.75}
-  width: 6
-  height: 6
+  boardStartPosition: {x: -3.5544329, y: -3.5544329}
+  cellSize: {x: 0.8886082, y: 0.8886082}
+  width: 1.5
+  height: 1.5
   divisions: 8
   gamePieceWidth: 0.5
   gamePieceHeight: 0.5
