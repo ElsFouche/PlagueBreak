@@ -1,11 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 using Settings = F_GameSettings;
 
 /// <summary>
@@ -15,7 +14,7 @@ using Settings = F_GameSettings;
 /// It spawns enemies on wave start, assigning them a random mesh
 /// from the pool of available meshes, etc.
 /// </summary>
-public class EnemyHandler : MonoBehaviour
+public class EnemyHandler : MonoBehaviour , ISaveLoad
 {
     // Designer 
     [Header("Enemy Stats")]
@@ -45,11 +44,14 @@ public class EnemyHandler : MonoBehaviour
     private int currWave = 1, enemiesInWave;
     private Dictionary<int, GameObject> spawnedEnemies = new();
     private GameBoard gameBoard;
+        // Reference to player
     private PlayerController playerController;
-
-    // Coroutine Lockout
-    private bool CR_HarmPlayerRunning = false;
-    private bool CR_HarmPausedRunning = false;
+        // Data Management
+    private SaveData saveData = new();
+        // Player harm loop settings
+    private float updateFrequency = 0.01f;
+        // Coroutine Lockouts
+    private Coroutine CR_HarmPlayer = null;
 
     /// <summary>
     /// Debug gizmos to show enemy spawn locations.
@@ -66,18 +68,26 @@ public class EnemyHandler : MonoBehaviour
 
     private void Start()
     {
-        GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent<GameBoard>(out gameBoard);
-        if (!gameBoard)
+        if (GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent<GameBoard>(out GameBoard gb))
         {
-            // Debug.Log("Fatal: No game board found. Are you sure you set up the scene correctly?");
+            gameBoard = gb;
+        }
+        if (gameBoard == null)
+        {
+            Debug.Log("Fatal: No game board found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
-        GameObject.FindGameObjectWithTag("Player").TryGetComponent<PlayerController>(out playerController);
-        if (!playerController)
+        if (GameObject.FindGameObjectWithTag("Player").TryGetComponent<PlayerController>(out PlayerController pc))
         {
-            // Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
+            playerController = pc;
+        }
+        if (playerController == null)
+        {
+            Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
+
+        saveData = SaveManager.instance.GetSaveData();
 
         StartWave();
     }
@@ -103,7 +113,7 @@ public class EnemyHandler : MonoBehaviour
             {
                 spawnedEnemies.Add(index,
                     Instantiate(
-                    basicEnemies[Random.Range(0, basicEnemies.Count - 1)],
+                    basicEnemies[UnityEngine.Random.Range(0, basicEnemies.Count - 1)],
                     spawnPoint,
                     Quaternion.identity)
                     );
@@ -114,7 +124,7 @@ public class EnemyHandler : MonoBehaviour
 
         WaveDamageTotal();
 
-        StartCoroutine(HarmPlayer());
+        StartPlayerHarmLoop();
     }
 
     private void NextWave()
@@ -123,6 +133,7 @@ public class EnemyHandler : MonoBehaviour
         currWave++;
         gameBoard.ResetBoard();
         UpdateWaveCount();
+        timeToNextAttackUI.fillAmount = 1.0f;
         StartWave();
     }
     
@@ -155,7 +166,7 @@ public class EnemyHandler : MonoBehaviour
             {
                 enemyIndices.Add(index);
             }
-            int destroyEnemyAtIndex = enemyIndices[Random.Range(0, enemyIndices.Count() - 1)];
+            int destroyEnemyAtIndex = enemyIndices[UnityEngine.Random.Range(0, enemyIndices.Count() - 1)];
 
             Destroy(spawnedEnemies[destroyEnemyAtIndex]);
             spawnedEnemies.Remove(destroyEnemyAtIndex);
@@ -164,11 +175,19 @@ public class EnemyHandler : MonoBehaviour
         if (spawnedEnemies.Count == 0 && currWave < numWaves)
         {
             NextWave();
-        } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) { 
-            // Shop / game over / etc
-            // Debug.Log("Wave complete.");
-            SceneManager.LoadScene("VictoryScreen");
+        } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) {
+            LevelComplete();
         }
+    }
+
+    private void LevelComplete()
+    {
+        Debug.Log("Level Complete!");
+        if (!saveData.completedLevels.Contains(saveData.currentLevel))
+        {
+            saveData.completedLevels.Add(saveData.currentLevel);
+        }
+        SceneHandler.instance.LoadLevelFromLevelType(E_LevelType.LevelSelect, "LevelSelect");
     }
 
     private float WaveHealthTotal(float modifier)
@@ -210,42 +229,51 @@ public class EnemyHandler : MonoBehaviour
 
     public void PausePlayerHarm(bool pause)
     {
-/*
- * This is forcing the harm player coroutine to run twice. 
         if (pause)
         {
-            StartCoroutine(HarmPausedIndicator());
+            if (CR_HarmPlayer != null)
+            {
+                StopCoroutine(CR_HarmPlayer);
+                CR_HarmPlayer = null;
+            }
         } else
         {
-            StartCoroutine(HarmPlayer());
+            StartPlayerHarmLoop();
         }
-        */
+    }
+
+    /// <summary>
+    /// Starts or restarts the damage loop coroutine.
+    /// </summary>
+    private void StartPlayerHarmLoop()
+    {
+        if (CR_HarmPlayer != null)
+        {
+            StopCoroutine(CR_HarmPlayer);
+            CR_HarmPlayer = StartCoroutine(HarmPlayer());
+        } else
+        {
+            CR_HarmPlayer = StartCoroutine(HarmPlayer());
+        }
     }
 
     private IEnumerator HarmPlayer()
-    {
-        if (!CR_HarmPlayerRunning)
-        {
-            CR_HarmPlayerRunning = true;
-        }
-        else
-        {
-            yield return null;
-        } 
-
+    { 
         // If no countdown UI, skip decrementing the and instead wait directly. 
         if (!timeToNextAttackUI)
         {
+            Debug.Log("No attack UI found. Are you sure you set up the scene correctly?");
+            yield return null;
+/*
             yield return new WaitForSeconds(timeBetweenAttacks);
 
             playerController.TakeDamage(attackDamage);
 
-            CR_HarmPlayerRunning = false;
             StartCoroutine(HarmPlayer());
+*/
         } 
         else
         {
-            float updateFrequency = 0.01f;
             while (timeToNextAttackUI.fillAmount > 0)
             {
                 // Time = timeBetweenAttacks
@@ -259,11 +287,8 @@ public class EnemyHandler : MonoBehaviour
             playerController.TakeDamage(attackDamage);
             timeToNextAttackUI.fillAmount = 1.0f;
 
+            // Pass control to harm paused
             StartCoroutine(HarmPausedIndicator(Settings.playerISeconds));
-            yield return new WaitForSeconds(Settings.playerISeconds);
-            
-            CR_HarmPlayerRunning = false;
-            StartCoroutine(HarmPlayer());
         }
     }
 
@@ -277,11 +302,6 @@ public class EnemyHandler : MonoBehaviour
     /// <returns></returns>
     private IEnumerator HarmPausedIndicator(float iSeconds = -1.0f)
     {
-        if (!CR_HarmPausedRunning)
-        {
-            CR_HarmPausedRunning = true;
-        } else yield return null;
-
         float timePaused = 0.0f;
         int fillBlink = 0;
 
@@ -310,6 +330,27 @@ public class EnemyHandler : MonoBehaviour
 
         // reset UI
         timeToNextAttackUI.fillAmount = 1.0f;
-        CR_HarmPausedRunning = false;
+
+        // Reinitialize player harm loop?
+        StartPlayerHarmLoop();
+    }
+
+    // Interfaces
+      // ISaveLoad
+    /// <summary>
+    /// This method is called in each interface member whenever data is loaded. 
+    /// </summary>
+    /// <param name="dataToLoad"></param>
+    public void LoadData(SaveData dataToLoad)
+    {
+        saveData = dataToLoad;
+    }
+    /// <summary>
+    /// Update the save data object with local information. 
+    /// </summary>
+    public void SaveData(ref SaveData savedData)
+    {
+        // Update savedData with local info
+        // savedData.whatever = whatever new
     }
 }

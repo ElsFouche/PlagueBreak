@@ -12,12 +12,16 @@ public class GameBoard : MonoBehaviour
     
     // Private
     [Header("Board Settings")]
-    [SerializeField] private int width;
-    [SerializeField] private int height;
+    [Range(0.1f, 1.5f)]
+    [SerializeField] private float width;
+    [Range(0.1f, 1.5f)]
+    [SerializeField] private float height;
     [Range(2, 30)]
     [SerializeField] private int divisions;
     [Header("Game Piece Settings")]
+    [Range(0.1f, 1.0f)]
     [SerializeField] private float gamePieceWidth;
+    [Range(0.1f, 1.0f)]
     [SerializeField] private float gamePieceHeight;
     [SerializeField] private GameObject gamePiece;
     [SerializeField] private List<PieceTypes> potentialPieces = new();
@@ -37,9 +41,12 @@ public class GameBoard : MonoBehaviour
     private void OnDrawGizmos()
     {
         if (Application.isPlaying) return;
-        
+
+        // Debug.Log("Screen to world point width,height: " + Camera.main.ScreenToWorldPoint(new Vector3(width, height, 10.0f)));
+
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireCube(transform.position, new Vector3(width, height, 0.0f));
+        Gizmos.DrawWireCube(transform.position, new Vector3(Camera.main.orthographicSize * 2 * Camera.main.aspect * width,
+                                                            Camera.main.orthographicSize * 2 * Camera.main.aspect * height, 0.0f));
         for (int row = 0; row < divisions; row++)
         {
             for (int col = 0; col < divisions; col++)
@@ -50,7 +57,7 @@ public class GameBoard : MonoBehaviour
                     boardStartPosition.x + (col * cellSize.x) + (cellSize.x / 2), 
                     boardStartPosition.y + (row * cellSize.y) + (cellSize.y / 2),
                     transform.position.z), 
-                    new Vector3(gamePieceWidth, gamePieceHeight, 0.0f));
+                    new Vector3(gamePieceWidth*cellSize.x, gamePieceHeight*cellSize.y, 0.0f));
             }
         }
     }
@@ -83,14 +90,13 @@ public class GameBoard : MonoBehaviour
                                             boardStartPosition.y + (row * cellSize.y) + (cellSize.y / 2),
                                             transform.position.z),
                                             Quaternion.identity);
-                tempGamePiece.transform.localScale = new Vector3(gamePieceWidth, gamePieceHeight, (gamePieceWidth+gamePieceHeight)/2);
+                tempGamePiece.transform.localScale = new Vector3(gamePieceWidth*cellSize.x, gamePieceHeight*cellSize.y, (gamePieceWidth+gamePieceHeight)/2);
                 tempGamePiece.transform.parent = transform;
                 
                 if (tempGamePiece.GetComponent<GamePiece>() != null)
                 {
                     GamePiece tempPieceData = tempGamePiece.GetComponent<GamePiece>();
                     // Initialize basic data
-                        // tempPieceData.SetNewKey(new Vector2(row, col));
                         tempPieceData.SetNewPosition(tempGamePiece.transform.position);
                         tempPieceData.SetNewRotation(tempGamePiece.transform.rotation);
                         tempPieceData.SetNewScale(tempGamePiece.transform.localScale);
@@ -177,7 +183,6 @@ public class GameBoard : MonoBehaviour
 
     private PieceTypes ScrambleMatchedPiece(PieceTypes match)
     {
-
         // Remove piece that would generate a match
         potentialPieces.Remove(match);
         int rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
@@ -192,12 +197,14 @@ public class GameBoard : MonoBehaviour
 
     private IEnumerator PopulateMatches()
     {
-        foreach (GameObject gamePiece in gamePieces.Values)
+        List<GameObject> pieces = new List<GameObject>(gamePieces.Values); 
+
+        foreach (GameObject gamePiece in pieces)
         {
             gamePiece.GetComponent<GamePiece>().FindHorizontalMatches();
             gamePiece.GetComponent<GamePiece>().FindVerticalMatches();
             StartCoroutine(gamePiece.GetComponent<GamePiece>().MatchMade());
-            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();  
         }
     }
     
@@ -205,11 +212,13 @@ public class GameBoard : MonoBehaviour
 
     private Vector2 BoardStartPosition()
     {
-        return new Vector2(transform.position.x - (float)width / 2, transform.position.y - (float)height / 2);
+        return new Vector2((transform.position.x - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / 2), 
+                           (transform.position.y - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / 2));
     }
     private Vector2 CellSize()
     {
-        return new Vector2((float)width / divisions, (float)height / divisions);
+        return new Vector2(Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / divisions, 
+                           Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / divisions);
     }
 
     // Conversions
@@ -300,6 +309,7 @@ public class GameBoard : MonoBehaviour
     /// <summary>
     /// Swaps the game pieces at the input positions, if found.
     /// Returns true if successful. 
+    /// Input values must be world position, not grid space.
     /// </summary>
     /// <param name="pieceA"></param>
     /// <param name="pieceB"></param>
@@ -311,7 +321,7 @@ public class GameBoard : MonoBehaviour
         // Attempt to store game piece data based on input coordinates.
         GamePiece pieceAData = gamePieces[pieceA].GetComponent<GamePiece>();
         GamePiece pieceBData = gamePieces[pieceB].GetComponent<GamePiece>();
-        
+
         // Return valid game pieces if the other piece is not and exit.
         if (pieceAData == null)
         {
@@ -397,40 +407,6 @@ public class GameBoard : MonoBehaviour
 
         return true;
     }
-    /*
-        public void FindMatches()
-        {
-            // Check for matches
-            if (!pieceAData.FindMatches() && !pieceBData.FindMatches())
-            {
-
-            }
-            bool pieceAMatch = pieceAData.FindMatches();
-            bool pieceBMatch = pieceBData.FindMatches();
-
-
-
-            GameObject pieceAGameObject = gamePieces[pieceA];
-            // Update key to game piece association
-            gamePieces[pieceA] = gamePieces[pieceB];
-            gamePieces[pieceB] = pieceAGameObject;
-
-            // gamePieces[pieceA].
-
-            // setnewposition
-            // clearmatches
-            // if findmatches pieceA and findmatches pieceB are false, return both
-        }
-    */
-    /*
-        private void DEBUG_GAMEPIECES()
-        {
-            foreach (var gamePiece in gamePieces)
-            {
-                Debug.Log("Key: " + gamePiece.Key + "    |    Location: " +  gamePiece.Value.transform.position);
-            }
-        }
-    */
 }
 
 

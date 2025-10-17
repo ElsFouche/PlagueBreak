@@ -1,10 +1,12 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using Settings = F_GameSettings;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour , ISaveLoad
 {
     // Public
     [Header("Player Settings")]
@@ -29,6 +31,10 @@ public class PlayerController : MonoBehaviour
     private EnemyHandler enemyHandler;
     // Player
     private float playerHealth = Settings.playerHealthMax;
+    private bool bIsInvincible = false;
+    private Coroutine CR_InvincibleTimer = null;
+    // Save Info
+    private SaveData saveData;
     
     private void Awake()
     {
@@ -45,6 +51,28 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("No player health bar found.");
         }
+
+        if (playerInput)
+        {
+            // If no camera has been set, use the main camera. 
+            if (!playerInput.camera)
+            {
+                playerInput.camera = Camera.main;
+            }
+
+            // If no UI Input Module has been set, attempt to load it from the current event system. 
+            if (playerInput.uiInputModule == null)
+            {
+                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule playerInput))
+                {
+                    Debug.Log("Player UI input module loaded from current event system.");
+                }
+            }
+        }
+
+        saveData = SaveManager.instance.GetSaveData();
+        damagePerMatch *= (1 + ( (float)saveData.playerDamageBoost / 100) );
+        playerHealth *= (1 + ( (float)saveData.playerHealthBoost / 100) );
     }
     private void OnEnable()
     {
@@ -72,17 +100,11 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Fatal: No enemy handler found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
-
-        // If no camera has been set, use the main camera. 
-        if (playerInput)
-        {
-            if (!playerInput.camera)
-            {
-                playerInput.camera = Camera.main;
-            }
-        }
     }
 
+    /// <summary>
+    /// Update currently only handles simple piece movement. 
+    /// </summary>
     private void Update()
     {
         if (heldPiece != null && screenTouched.phase.IsInProgress())
@@ -108,7 +130,9 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// On finger up: 
+    /// - If holding a piece: requests that the swapped pieces check for matches.
+    /// - 
     /// </summary>
     /// <param name="context"></param>
     private void TouchEnded(InputAction.CallbackContext context)
@@ -164,14 +188,13 @@ public class PlayerController : MonoBehaviour
         if (!isAdjacent)
         {
             StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
+            return;
         }
         else
         {
-            bool matchFound = false;
             int heldHorizontalMatches, heldVerticalMatches, touchedHorizontalMatches, touchedVerticalMatches;
 
             board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
-            // Debug.Log("Pieces swapped.");
 
             heldHorizontalMatches = heldPieceData.FindHorizontalMatches().Count;
             heldVerticalMatches = heldPieceData.FindVerticalMatches().Count;
@@ -181,40 +204,63 @@ public class PlayerController : MonoBehaviour
             touchedVerticalMatches = swappedPiece.FindVerticalMatches().Count;
             StartCoroutine(swappedPiece.MatchMade()); // Checks number of matches internally
 
-
-            if (heldHorizontalMatches > 2 || heldVerticalMatches > 2 ||
-                touchedHorizontalMatches > 2 || touchedVerticalMatches > 2)
+            if (heldHorizontalMatches >= Settings.howManyInAMatch || heldVerticalMatches >= Settings.howManyInAMatch ||
+                touchedHorizontalMatches >= Settings.howManyInAMatch || touchedVerticalMatches >= Settings.howManyInAMatch)
             {
-                matchFound = true;
-            }
-
-            if (!matchFound)
+                // Determine the base damage from all the matches.
+                // Only count pieces beginning at the piece that made the match.
+                int damage = (Mathf.Max(heldHorizontalMatches - (Settings.howManyInAMatch - 1), 0) + 
+                              Mathf.Max(heldVerticalMatches - (Settings.howManyInAMatch - 1), 0) + 
+                              Mathf.Max(touchedVerticalMatches - (Settings.howManyInAMatch - 1), 0) + 
+                              Mathf.Max(touchedHorizontalMatches - (Settings.howManyInAMatch - 1), 0));
+                HarmEnemiesFromMatchCount(damage);
+            } else
             {
                 board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
                 // Debug.Log("Pieces swapped back.");
             }
-
-            HarmEnemiesFromMatchCount(heldHorizontalMatches + heldVerticalMatches + touchedHorizontalMatches + touchedVerticalMatches);
         }
     }
 
     // Damage formula
-    // 5 is a magic number that should be controllable as part of the difficulty 
     private void HarmEnemiesFromMatchCount(int matches)
     {
-        float damage = (damagePerMatch + (float)((matches - Settings.howManyInAMatch) / 5));
-        enemyHandler.DealDamage(damage);
+        // 5 is a magic number and should be expose to allow for designer control of the
+        // game's difficulty. Per the below formula, when the player reaches 5 matches they
+        // deal double damage. 
+        float finalDamage = (damagePerMatch * (float)(1.0f + ((matches - 1) / 5.0f)));
+        Debug.Log("Damage dealt: " + finalDamage);
+        enemyHandler.DealDamage(finalDamage);
     }
 
     public void TakeDamage(float damage)
     {
-        Debug.Log("Player damaged: " + damage);
-        playerHealth = Mathf.Clamp(playerHealth - damage, 0.0f, Settings.playerHealthMax);
-        UpdateHealthDisplay();
-        if (playerHealth <= 0.0f)
+        if (bIsInvincible)
         {
-            Debug.Log("Game over.");
-            SceneManager.LoadScene(sceneName: "GameOver");
+            Debug.Log("Player is invincible.");
+            return;
+        } else
+        {
+            Debug.Log("Player damaged: " + damage);
+            playerHealth = Mathf.Clamp(playerHealth - damage, 0.0f, Settings.playerHealthMax);
+            UpdateHealthDisplay();
+            if (playerHealth <= 0.0f)
+            {
+                Debug.Log("Game over.");
+                SceneManager.LoadScene(sceneName: "GameOver");
+            } else
+            {
+                if (CR_InvincibleTimer != null)
+                {
+                    StopCoroutine(CR_InvincibleTimer);
+                    CR_InvincibleTimer = StartCoroutine(InvincibleTimer(Settings.playerISeconds));
+                    bIsInvincible = true;
+                } else
+                {
+                    bIsInvincible = true;
+                    CR_InvincibleTimer = StartCoroutine(InvincibleTimer(Settings.playerISeconds));
+                }
+            }
         }
     }
 
@@ -268,6 +314,30 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private IEnumerator InvincibleTimer(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        bIsInvincible = false;
+    }
+
+    // Interfaces
+      // ISaveLoad
+    /// <summary>
+    /// This method is called in each interface member whenever data is loaded. 
+    /// </summary>
+    /// <param name="dataToLoad"></param>
+    public void LoadData(SaveData dataToLoad)
+    {
+        saveData = dataToLoad;
+    }
+    /// <summary>
+    /// Update the save data object with local information. 
+    /// </summary>
+    public void SaveData(ref SaveData savedData)
+    {
+        // Update savedData with local info
+        // savedData.whatever = whatever new
+    }
 
     // Debug
     private IEnumerator WigglePiece(GameObject piece)
