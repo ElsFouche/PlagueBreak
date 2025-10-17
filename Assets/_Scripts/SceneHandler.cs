@@ -3,6 +3,7 @@ using System.Collections;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.XR;
 using Settings = F_GameSettings;
 
 public class SceneHandler : MonoBehaviour, ISaveLoad
@@ -82,9 +83,10 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
             case E_LevelType.Settings:
                 break;
             case E_LevelType.Shop:
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             case E_LevelType.SpecialShop:
+                SaveLevelID(newLevelID);
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("CrystalShop"));
                 break;
             case E_LevelType.LevelSelect:
                 SaveLevelID(newLevelID);
