@@ -1,9 +1,6 @@
-using System;
 using System.Collections;
-using Unity.Properties;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.XR;
 using Settings = F_GameSettings;
 
 public class SceneHandler : MonoBehaviour, ISaveLoad
