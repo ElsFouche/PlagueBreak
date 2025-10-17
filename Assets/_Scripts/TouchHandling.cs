@@ -19,7 +19,7 @@ public class TouchHandling : MonoBehaviour
 
     protected void Awake()
     {
-        playerInput = FindFirstObjectByType<PlayerInput>();
+        playerInput = this.gameObject.GetComponent<PlayerInput>();
         if (playerInput == null)
         {
             Debug.Log("Fatal: Player input module not found.");
@@ -27,7 +27,7 @@ public class TouchHandling : MonoBehaviour
         }
         screenTouched = playerInput.actions["Main/ScreenTouched"];
         touchPosition = playerInput.actions["Main/TouchLocation"];
-
+/*
         if (playerInput.camera == null)
         {
             playerInput.camera = Camera.main;
@@ -35,12 +35,13 @@ public class TouchHandling : MonoBehaviour
 
         if (playerInput.uiInputModule == null)
         {
-            if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule playerInput))
+            if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule pi))
             {
-                this.playerInput.uiInputModule = playerInput;
+                this.playerInput.uiInputModule = pi;
                 Debug.Log("Player UI input module loaded from current event system.");
             }
         }
+*/
         StartCoroutine(PostStart());
     }
 
@@ -57,7 +58,7 @@ public class TouchHandling : MonoBehaviour
 
     private IEnumerator PostStart()
     {
-        yield return new WaitForEndOfFrame();
+        yield return new WaitForSeconds(0.5f);
 
         // If no camera has been set, use the main camera. 
         if (playerInput)
@@ -69,10 +70,10 @@ public class TouchHandling : MonoBehaviour
 
             if (playerInput.uiInputModule == null)
             {
-                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule playerInput))
+                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule pi))
                 {
-                    this.playerInput.uiInputModule = playerInput;
-                    Debug.Log("Player UI input module loaded from current event system.");
+                    this.playerInput.uiInputModule = pi;
+                    Debug.Log("Player UI input module loaded from current event system in PostStart.");
                 }
             }
         }

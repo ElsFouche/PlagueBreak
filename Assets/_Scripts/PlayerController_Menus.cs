@@ -56,6 +56,7 @@ public class PlayerController_Menus : TouchHandling
 
     public void ExitGame()
     {
+        Debug.Log("Quitting game.");
         SceneHandler.instance.ExitGame();
     }
 
