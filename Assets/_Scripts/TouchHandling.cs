@@ -121,6 +121,11 @@ public class TouchHandling : MonoBehaviour
             playerInput.camera = camera;
         }
 
+        if (playerInput.camera == null)
+        {
+            return Vector3.zero;
+        }
+
         Vector3 position = playerInput.camera.ScreenToWorldPoint(
                                             new Vector3(touchPosition.ReadValue<Vector2>().x,
                                                         touchPosition.ReadValue<Vector2>().y,

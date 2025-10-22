@@ -3,12 +3,16 @@ using System.Collections.Generic;
 [System.Serializable]
 public class SaveData
 {
+    // Levels 
     public List<string> completedLevels;
     public string currentLevel;
 
     // Upgrade Data
     public int playerDamageBoost;
     public int playerHealthBoost;
+
+    // Currency
+    public int crystals;
 
     // Clicked Buttons
     public List<string> clickedButtons;
@@ -20,6 +24,8 @@ public class SaveData
 
         playerDamageBoost = 0;
         playerHealthBoost = 0;
+
+        crystals = 0;
 
         clickedButtons = new List<string> { "NULL" };
     }
