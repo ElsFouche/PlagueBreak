@@ -17,9 +17,19 @@ public class PlayerController_Menus : TouchHandling
         base.Awake();
         if (!playerIcon)
         {
-            Debug.Log("Player icon not found.");
+            // Debug.Log("Player icon not found.");
             playerIcon = new GameObject("PlaceholderPlayerIcon");
         }
+    }
+
+    new private void OnEnable()
+    {
+        base.OnEnable();
+    }
+
+    new private void OnDisable()
+    {
+        base.OnDisable();
     }
 
     private void Start()
@@ -48,15 +58,16 @@ public class PlayerController_Menus : TouchHandling
         // Add functionality to TouchEnded
     }
 
+
     public void LevelIconTouched(LevelSelectButton level)
     {
-        Debug.Log("Level selected: " + level.levelType.ToString());
+        // Debug.Log("Level selected: " + level.levelType.ToString());
         SceneHandler.instance.LoadLevelFromLevelType(level.levelType, level.levelID);
     }
 
     public void ExitGame()
     {
-        Debug.Log("Quitting game.");
+        // Debug.Log("Quitting game.");
         SceneHandler.instance.ExitGame();
     }
 

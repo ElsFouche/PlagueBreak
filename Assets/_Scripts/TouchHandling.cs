@@ -7,8 +7,6 @@ using Settings = F_GameSettings;
 
 public class TouchHandling : MonoBehaviour
 {
-    // Public
-
     // Protected
         // Touch Data
     protected Vector2 touchStartPos = new(0.0f, 0.0f), touchEndPos = new(0.0f, 0.0f);
@@ -19,29 +17,19 @@ public class TouchHandling : MonoBehaviour
 
     protected void Awake()
     {
-        playerInput = this.gameObject.GetComponent<PlayerInput>();
-        if (playerInput == null)
+        if (this.gameObject.TryGetComponent<PlayerInput>(out PlayerInput pi))
+        {
+            playerInput = pi;
+        }
+        else
         {
             Debug.Log("Fatal: Player input module not found.");
             Destroy(this);
         }
+
         screenTouched = playerInput.actions["Main/ScreenTouched"];
         touchPosition = playerInput.actions["Main/TouchLocation"];
-/*
-        if (playerInput.camera == null)
-        {
-            playerInput.camera = Camera.main;
-        }
 
-        if (playerInput.uiInputModule == null)
-        {
-            if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule pi))
-            {
-                this.playerInput.uiInputModule = pi;
-                Debug.Log("Player UI input module loaded from current event system.");
-            }
-        }
-*/
         StartCoroutine(PostStart());
     }
 
@@ -50,12 +38,13 @@ public class TouchHandling : MonoBehaviour
         screenTouched.started += TouchStarted;
         screenTouched.canceled += TouchEnded;
     }
+
     protected void OnDisable()
     {
         screenTouched.started -= TouchStarted;
         screenTouched.canceled -= TouchEnded;
     }
-
+    
     private IEnumerator PostStart()
     {
         yield return new WaitForSeconds(0.5f);
@@ -70,22 +59,24 @@ public class TouchHandling : MonoBehaviour
 
             if (playerInput.uiInputModule == null)
             {
-                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule pi))
+                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule puii))
                 {
-                    this.playerInput.uiInputModule = pi;
-                    Debug.Log("Player UI input module loaded from current event system in PostStart.");
+                    this.playerInput.uiInputModule = puii;
+                    // Debug.Log("Player UI input module loaded from current event system in PostStart.");
                 }
             }
         }
 
+/*
         Debug.Log("Player Input: " + playerInput.name);
         Debug.Log("Player Camera: " + playerInput.camera.name);
         Debug.Log("Player UI Input Module: " + playerInput.uiInputModule.name);
+*/
     }
 
     /// <summary>
     /// On finger down:
-    /// - Attempts to retrieve the game piece at the touch position. 
+    /// Retrieves the start position of the touch. 
     /// </summary>
     /// <param name="context"></param>
     protected virtual void TouchStarted(InputAction.CallbackContext context)
@@ -94,7 +85,8 @@ public class TouchHandling : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// On finger up: 
+    /// Retrieves the end position of the touch. 
     /// </summary>
     /// <param name="context"></param>
     protected virtual void TouchEnded(InputAction.CallbackContext context)
