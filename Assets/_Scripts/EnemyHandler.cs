@@ -174,21 +174,48 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
         if (spawnedEnemies.Count == 0 && currWave < numWaves)
         {
+            EarnCrystals();
             NextWave();
         } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) {
+            EarnCrystals(0.25f);
             LevelComplete();
         }
     }
 
     private void LevelComplete()
     {
-        Debug.Log("Level Complete!");
+        // Debug.Log("Level Complete!");
         if (!saveData.completedLevels.Contains(saveData.currentLevel))
         {
             saveData.completedLevels.Add(saveData.currentLevel);
         }
         SceneHandler.instance.LoadLevelFromLevelType(E_LevelType.LevelSelect, "LevelSelect");
     }
+
+    private void EarnCrystals(float bonusChance = 0.0f)
+    {
+        int crystalsDropped = 0;
+
+        for (int i = 0; i < Settings.numCrystalsDropChances; i++)
+        {
+            if (UnityEngine.Random.Range(0.0f, 1.0f) > (Settings.crystalDropChance + bonusChance))
+            {
+                crystalsDropped++;
+            }
+        }
+
+        if (crystalsDropped < Settings.minCrystalsDropped)
+        {
+            crystalsDropped = Settings.minCrystalsDropped;
+        }
+
+        saveData.crystals += crystalsDropped;
+
+        CurrencyDisplay currencyDisplay = (CurrencyDisplay)FindFirstObjectByType(typeof(CurrencyDisplay));
+        currencyDisplay.UpdateText();
+    }
+
+    // ---------------Wave Data Calculations---------------
 
     private float WaveHealthTotal(float modifier)
     {
@@ -208,6 +235,8 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         }
     }
 
+    // ---------------Updates---------------
+
     public void UpdateWaveCount(string text = "")
     {
         string waveText = "Wave: " + currWave + " / " + numWaves;
@@ -221,6 +250,8 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             waveHealthBar.localScale = new Vector3(currWaveHealth / maxWaveHealth, 1.0f, 1.0f);
         }
     }
+
+    // ---------------Harming the Player---------------
 
     private void OnApplicationPause(bool pause)
     {
@@ -335,8 +366,10 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         StartPlayerHarmLoop();
     }
 
-    // Interfaces
-      // ISaveLoad
+    // ---------------Interfaces---------------
+
+    // ---------------ISaveLoad---------------
+
     /// <summary>
     /// This method is called in each interface member whenever data is loaded. 
     /// </summary>

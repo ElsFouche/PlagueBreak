@@ -9,9 +9,11 @@ public class UpgradeShopButton : MonoBehaviour
     [SerializeField] private int playerHealthBoost = 0;
     [Header("Unique Button Identifier")]
     [SerializeField] private string buttonID = string.Empty;
+    [SerializeField] private int cost = 0;
 
     private SaveData saveData;
     private bool bWasClicked = false;
+    private CurrencyDisplay currencyDisplay;
 
     private void Awake()
     {
@@ -29,6 +31,7 @@ public class UpgradeShopButton : MonoBehaviour
                 }
             }
         }
+        currencyDisplay = (CurrencyDisplay)FindFirstObjectByType(typeof(CurrencyDisplay));
     }
 
     public void OnUpgradeClick()
@@ -39,6 +42,18 @@ public class UpgradeShopButton : MonoBehaviour
             return;
         }
         bWasClicked = true;
+
+        if (cost > saveData.crystals)
+        {
+            return;
+        } else
+        {
+            saveData.crystals -= cost;
+            if (currencyDisplay)
+            {
+                currencyDisplay.UpdateText();
+            }
+        }
 
         this.gameObject.GetComponent<Button>().interactable = false;
 
