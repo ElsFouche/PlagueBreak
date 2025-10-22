@@ -12,6 +12,7 @@ public class GamePiece : MonoBehaviour
     private PieceTypes pieceType;
     private List<Vector2> horizontalMatches = new();
     private List<Vector2> verticalMatches = new();
+    [SerializeField] private List<Material> materials = new();
 
     // Getters
 
@@ -71,30 +72,87 @@ public class GamePiece : MonoBehaviour
     public PieceTypes SetPieceType(PieceTypes type)
     {
         pieceType = type;
+        MeshRenderer pieceColor = new();
 
-        MeshRenderer pieceColor = this.GetComponent<MeshRenderer>();
-
-        if (pieceColor == null)
+        if (this.TryGetComponent<MeshRenderer>(out MeshRenderer mr))
         {
+            pieceColor = mr;
+        } else
+        {
+            Debug.Log("Mesh renderer not found.");
             return type;
         }
 
         switch (type) 
         {
             case PieceTypes.None:
-                pieceColor.material.color = new Color(0.2f, 0.2f, 0.2f);
-                break;
-            case PieceTypes.Red:
-                pieceColor.material.color = new Color(1.0f,0.0f,0.0f);
-                break;
-            case PieceTypes.Green:
-                pieceColor.material.color = new Color(0.0f, 1.0f, 0.0f);
+                if (materials.Count >= 1)
+                {
+                    pieceColor.material = materials[0];
+                }
+                else
+                {
+                    pieceColor.material.color = new Color(0.2f, 0.2f, 0.2f);
+                }
                 break;
             case PieceTypes.Blue:
-                pieceColor.material.color = new Color(0.0f, 0.0f, 1.0f);
+                if (materials.Count >= 2)
+                {
+                    pieceColor.material = materials[1];
+                }
+                else
+                {
+                    pieceColor.material.color = new Color(0.0f, 0.0f, 1.0f);
+                }
+                break;
+            case PieceTypes.Green:
+                if (materials.Count >= 3)
+                {
+                    pieceColor.material = materials[2];
+                }
+                else
+                {
+                    pieceColor.material.color = new Color(0.0f, 1.0f, 0.0f);
+                }
+                break;
+            case PieceTypes.Orange:
+                if (materials.Count >= 4)
+                {
+                    pieceColor.material = materials[3];
+                }
+                else
+                {
+                    pieceColor.material.color = new Color(1.0f, 0.75f, 0.0f);
+                }
+                break;
+            case PieceTypes.Purple:
+                if (materials.Count >= 5)
+                {
+                    pieceColor.material = materials[4];
+                }
+                else
+                {
+                    pieceColor.material.color = new Color(1.0f, 0.0f, 1.0f);
+                }
+                break;
+            case PieceTypes.Red:
+                if (materials.Count >= 6)
+                {
+                    pieceColor.material = materials[5];
+                }
+                else
+                {
+                    pieceColor.material.color = new Color(1.0f, 0.0f, 0.0f);
+                }
                 break;
             case PieceTypes.Yellow:
-                pieceColor.material.color = new Color(1.0f, 1.0f, 0.0f);
+                if (materials.Count >= 7)
+                {
+                    pieceColor.material = materials[6];
+                } else
+                {
+                    pieceColor.material.color = new Color(1.0f, 1.0f, 0.0f);
+                }
                 break;
         }
         return type;

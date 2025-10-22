@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -7,8 +8,6 @@ using Settings = F_GameSettings;
 
 public class TouchHandling : MonoBehaviour
 {
-    // Public
-
     // Protected
         // Touch Data
     protected Vector2 touchStartPos = new(0.0f, 0.0f), touchEndPos = new(0.0f, 0.0f);
@@ -16,32 +15,23 @@ public class TouchHandling : MonoBehaviour
     protected PlayerInput playerInput;
     protected InputAction screenTouched;
     protected InputAction touchPosition;
+    private Coroutine doubleClickPrevention = null;
 
     protected void Awake()
     {
-        playerInput = this.gameObject.GetComponent<PlayerInput>();
-        if (playerInput == null)
+        if (this.gameObject.TryGetComponent<PlayerInput>(out PlayerInput pi))
+        {
+            playerInput = pi;
+        }
+        else
         {
             Debug.Log("Fatal: Player input module not found.");
             Destroy(this);
         }
+
         screenTouched = playerInput.actions["Main/ScreenTouched"];
         touchPosition = playerInput.actions["Main/TouchLocation"];
-/*
-        if (playerInput.camera == null)
-        {
-            playerInput.camera = Camera.main;
-        }
 
-        if (playerInput.uiInputModule == null)
-        {
-            if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule pi))
-            {
-                this.playerInput.uiInputModule = pi;
-                Debug.Log("Player UI input module loaded from current event system.");
-            }
-        }
-*/
         StartCoroutine(PostStart());
     }
 
@@ -50,12 +40,13 @@ public class TouchHandling : MonoBehaviour
         screenTouched.started += TouchStarted;
         screenTouched.canceled += TouchEnded;
     }
+
     protected void OnDisable()
     {
         screenTouched.started -= TouchStarted;
         screenTouched.canceled -= TouchEnded;
     }
-
+    
     private IEnumerator PostStart()
     {
         yield return new WaitForSeconds(0.5f);
@@ -70,31 +61,40 @@ public class TouchHandling : MonoBehaviour
 
             if (playerInput.uiInputModule == null)
             {
-                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule pi))
+                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule puii))
                 {
-                    this.playerInput.uiInputModule = pi;
-                    Debug.Log("Player UI input module loaded from current event system in PostStart.");
+                    this.playerInput.uiInputModule = puii;
+                    // Debug.Log("Player UI input module loaded from current event system in PostStart.");
                 }
             }
         }
 
+/*
         Debug.Log("Player Input: " + playerInput.name);
         Debug.Log("Player Camera: " + playerInput.camera.name);
         Debug.Log("Player UI Input Module: " + playerInput.uiInputModule.name);
+*/
     }
 
     /// <summary>
     /// On finger down:
-    /// - Attempts to retrieve the game piece at the touch position. 
+    /// Retrieves the start position of the touch. 
     /// </summary>
     /// <param name="context"></param>
     protected virtual void TouchStarted(InputAction.CallbackContext context)
     {
+        if (doubleClickPrevention != null)
+        {
+            return; 
+        }
+
+        doubleClickPrevention = StartCoroutine(ResetClickLockout());
         touchStartPos = GetFingerPosition();
     }
 
     /// <summary>
-    /// 
+    /// On finger up: 
+    /// Retrieves the end position of the touch. 
     /// </summary>
     /// <param name="context"></param>
     protected virtual void TouchEnded(InputAction.CallbackContext context)
@@ -111,11 +111,28 @@ public class TouchHandling : MonoBehaviour
     /// <returns></returns>
     protected Vector3 GetFingerPosition()
     {
+        if (playerInput == null && this.gameObject.TryGetComponent<PlayerInput>(out PlayerInput pi))
+        {
+            playerInput = pi;
+        }
+
+        if (playerInput.camera == null && this.gameObject.TryGetComponent<Camera>(out Camera camera))
+        {
+            playerInput.camera = camera;
+        }
+
         Vector3 position = playerInput.camera.ScreenToWorldPoint(
                                             new Vector3(touchPosition.ReadValue<Vector2>().x,
                                                         touchPosition.ReadValue<Vector2>().y,
                                                         playerInput.camera.transform.position.z * -1.0f));
         position.z = transform.position.z;
         return position;
+    }
+
+    private IEnumerator ResetClickLockout()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        doubleClickPrevention = null;
     }
 }

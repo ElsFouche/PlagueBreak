@@ -77,6 +77,10 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
         {
             case E_LevelType.None:
                 break;
+            case E_LevelType.MainMenu:
+                SaveLevelID(newLevelID);
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("MainMenu"));
+                break;
             case E_LevelType.Settings:
                 break;
             case E_LevelType.Shop:
@@ -108,6 +112,19 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
             default:
                 break;
         }
+    }
+
+    public void LoadLevelFromName(string name, string newLevelID)
+    {
+        if (asyncLevelOp != null)
+        {
+            Debug.Log("Async level operation: " + asyncLevelOp + "\nis currently running. Unable to load.");
+            return;
+        }
+
+        SaveLevelID(newLevelID);
+
+        asyncLevelOp = StartCoroutine(LoadLevelAsync(name));
     }
 
     private IEnumerator LoadLevelAsync(string levelName, bool unloadPrevious = true)

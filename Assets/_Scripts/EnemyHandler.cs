@@ -111,12 +111,12 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         {
             if (index < basicEnemies.Count)
             {
-                spawnedEnemies.Add(index,
-                    Instantiate(
+                GameObject tempEnemy = Instantiate(
                     basicEnemies[UnityEngine.Random.Range(0, basicEnemies.Count - 1)],
                     spawnPoint,
-                    Quaternion.identity)
-                    );
+                    Quaternion.identity);
+                tempEnemy.transform.parent = transform;
+                spawnedEnemies.Add(index, tempEnemy);
             }
             index++;
         }
