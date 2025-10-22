@@ -202,7 +202,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 5739290904790476736}
         m_TargetAssemblyTypeName: PlayerController_Menus, Assembly-CSharp
         m_MethodName: ExitGame
         m_Mode: 1
@@ -504,7 +504,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5b208b00c1a75a4b838d3aee0c971f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelType: 1
+  levelType: 2
   levelID: Settings
 --- !u!1 &643294974
 GameObject:
@@ -693,7 +693,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5b208b00c1a75a4b838d3aee0c971f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelType: 3
+  levelType: 4
   levelID: SpecialShop
 --- !u!114 &812520604
 MonoBehaviour:
@@ -1209,7 +1209,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5b208b00c1a75a4b838d3aee0c971f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelType: 4
+  levelType: 5
   levelID: LevelSelect
 --- !u!1 &1668858041
 GameObject:

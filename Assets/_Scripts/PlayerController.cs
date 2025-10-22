@@ -21,6 +21,7 @@ public class PlayerController : TouchHandling , ISaveLoad
     private GameBoard board;
     private GameObject heldPiece;
     private GamePiece heldPieceData;
+    private bool controlLockout = false; 
       // Enemies
     private EnemyHandler enemyHandler;
       // Player Data
@@ -44,23 +45,11 @@ public class PlayerController : TouchHandling , ISaveLoad
         playerHealth *= (1 + ( (float)saveData.playerHealthBoost / 100) );
     }
 
-    new private void OnEnable()
-    {
-        base.OnEnable();
-    }
-
-    new private void OnDisable()
-    {
-        base.OnDisable();
-    }
-
     /// <summary>
     /// Retrieve references to the game board and the enemy handler. 
     /// </summary>
     private void Start()
     {
-        // board = GameObject.FindGameObjectWithTag("GameBoard").GetComponent<GameBoard>();
-        
         if (GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent(out GameBoard gb))
         {
             board = gb;
@@ -70,8 +59,6 @@ public class PlayerController : TouchHandling , ISaveLoad
             Application.Quit();
         }
 
-        // enemyHandler = GameObject.FindGameObjectWithTag("EnemySystem").GetComponent<EnemyHandler>();
-        
         if (GameObject.FindGameObjectWithTag("EnemySystem").TryGetComponent<EnemyHandler>(out EnemyHandler eh))
         {
             enemyHandler = eh;
@@ -100,10 +87,16 @@ public class PlayerController : TouchHandling , ISaveLoad
     /// - Attempts to retrieve the game piece at the touch position. 
     /// </summary>
     /// <param name="context"></param>
-    new private void TouchStarted(InputAction.CallbackContext ctx)
+    protected override void TouchStarted(InputAction.CallbackContext ctx)
     {
         base.TouchStarted(ctx);
-        Debug.Log("Player touched at: " + touchStartPos);
+        if (controlLockout)
+        {
+            if (heldPiece) { heldPieceData.ReturnPiece(); }
+            heldPiece = null;
+            return;
+        }
+
         heldPiece = GetPieceTouched(touchStartPos);
         if (heldPiece != null)
         {
@@ -117,8 +110,18 @@ public class PlayerController : TouchHandling , ISaveLoad
     /// - 
     /// </summary>
     /// <param name="context"></param>
-    new private void TouchEnded(InputAction.CallbackContext context)
+    protected override void TouchEnded(InputAction.CallbackContext context)
     {
+        if (controlLockout && !heldPiece)
+        {
+            return; 
+        } else if (controlLockout)
+        {
+            heldPieceData.ReturnPiece();
+            heldPiece = null;
+            return;
+        }
+
         if (heldPiece)
         {
             touchEndPos = GetFingerPosition();
@@ -204,6 +207,11 @@ public class PlayerController : TouchHandling , ISaveLoad
         }
     }
 
+    public void SetLockout(bool locked)
+    {
+        controlLockout = locked;
+    }
+
     // ---------------Combat---------------
 
     /// <summary>
@@ -243,7 +251,7 @@ public class PlayerController : TouchHandling , ISaveLoad
                 Debug.Log("Game over.");
                 // This should be updated to use the Scene Handler and death should be
                 // implemented thoughtfully. 
-                SceneManager.LoadScene(sceneName: "GameOver");
+                SceneHandler.instance.LoadLevelFromName("GameOver", "GameOver");
             } else
             {
                 if (CR_InvincibleTimer != null)

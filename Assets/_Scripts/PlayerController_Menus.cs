@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -11,7 +12,8 @@ public class PlayerController_Menus : TouchHandling
     // Private
     private List<Button> levelSelectButtons = new();
     private SaveData saveData;
-    
+    private Coroutine doubleClickPrevention = null;
+
     new private void Awake()
     {
         base.Awake();
@@ -20,16 +22,6 @@ public class PlayerController_Menus : TouchHandling
             // Debug.Log("Player icon not found.");
             playerIcon = new GameObject("PlaceholderPlayerIcon");
         }
-    }
-
-    new private void OnEnable()
-    {
-        base.OnEnable();
-    }
-
-    new private void OnDisable()
-    {
-        base.OnDisable();
     }
 
     private void Start()
@@ -45,9 +37,19 @@ public class PlayerController_Menus : TouchHandling
         UpdateValidLevels();
     }
 
+    new private void OnDisable()
+    {
+        base.OnDisable();
+        StopAllCoroutines();
+    }
+
     protected override void TouchStarted(InputAction.CallbackContext ctx)
     {
         base.TouchStarted(ctx);
+        if (doubleClickPrevention == null)
+        {
+            return;
+        }
         // Add functionality to TouchStarted
         playerIcon.transform.position = playerInput.camera.WorldToScreenPoint(touchStartPos);
     }
@@ -61,6 +63,11 @@ public class PlayerController_Menus : TouchHandling
 
     public void LevelIconTouched(LevelSelectButton level)
     {
+        if (doubleClickPrevention != null)
+        {
+            return;
+        }
+
         // Debug.Log("Level selected: " + level.levelType.ToString());
         SceneHandler.instance.LoadLevelFromLevelType(level.levelType, level.levelID);
     }

@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -14,6 +15,7 @@ public class TouchHandling : MonoBehaviour
     protected PlayerInput playerInput;
     protected InputAction screenTouched;
     protected InputAction touchPosition;
+    private Coroutine doubleClickPrevention = null;
 
     protected void Awake()
     {
@@ -81,6 +83,12 @@ public class TouchHandling : MonoBehaviour
     /// <param name="context"></param>
     protected virtual void TouchStarted(InputAction.CallbackContext context)
     {
+        if (doubleClickPrevention != null)
+        {
+            return; 
+        }
+
+        doubleClickPrevention = StartCoroutine(ResetClickLockout());
         touchStartPos = GetFingerPosition();
     }
 
@@ -103,11 +111,28 @@ public class TouchHandling : MonoBehaviour
     /// <returns></returns>
     protected Vector3 GetFingerPosition()
     {
+        if (playerInput == null && this.gameObject.TryGetComponent<PlayerInput>(out PlayerInput pi))
+        {
+            playerInput = pi;
+        }
+
+        if (playerInput.camera == null && this.gameObject.TryGetComponent<Camera>(out Camera camera))
+        {
+            playerInput.camera = camera;
+        }
+
         Vector3 position = playerInput.camera.ScreenToWorldPoint(
                                             new Vector3(touchPosition.ReadValue<Vector2>().x,
                                                         touchPosition.ReadValue<Vector2>().y,
                                                         playerInput.camera.transform.position.z * -1.0f));
         position.z = transform.position.z;
         return position;
+    }
+
+    private IEnumerator ResetClickLockout()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        doubleClickPrevention = null;
     }
 }

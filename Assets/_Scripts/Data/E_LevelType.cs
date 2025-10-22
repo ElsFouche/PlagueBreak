@@ -4,6 +4,7 @@ using System;
 public enum E_LevelType
 {
     None,
+    MainMenu,
     Settings,
     Shop,
     SpecialShop,

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using PieceTypes = E_PieceTypes.PieceType;
+using Settings = F_GameSettings;
 
 public class GameBoard : MonoBehaviour
 {
@@ -26,10 +27,8 @@ public class GameBoard : MonoBehaviour
     [SerializeField] private GameObject gamePiece;
     [SerializeField] private List<PieceTypes> potentialPieces = new();
     private List<PieceTypes> generatedPieces = new();
-
     private Dictionary<Vector2, GameObject> gamePieces;
-
-    // Editor Only
+    private Coroutine boardReset = null;
 
     private void OnValidate()
     {
@@ -89,7 +88,11 @@ public class GameBoard : MonoBehaviour
                                             boardStartPosition.x + (col * cellSize.x) + (cellSize.x / 2),
                                             boardStartPosition.y + (row * cellSize.y) + (cellSize.y / 2),
                                             transform.position.z),
-                                            Quaternion.identity);
+                                            new Quaternion(
+                                                Quaternion.identity.x, 
+                                                180.0f, 
+                                                Quaternion.identity.z, 
+                                                Quaternion.identity.w));
                 tempGamePiece.transform.localScale = new Vector3(gamePieceWidth*cellSize.x, gamePieceHeight*cellSize.y, (gamePieceWidth+gamePieceHeight)/2);
                 tempGamePiece.transform.parent = transform;
                 
@@ -121,10 +124,43 @@ public class GameBoard : MonoBehaviour
 
     public void ResetBoard()
     {
+        if (GameObject.FindWithTag("Player").TryGetComponent<PlayerController>(out PlayerController pc))
+        {
+            pc.SetLockout(true);
+            
+            if (boardReset == null)
+            {
+                boardReset = StartCoroutine(SlowBoardReset());
+            }
+        }
+    }
+
+    private IEnumerator SlowBoardReset()
+    {
+        List<GamePiece> tempPieces = new List<GamePiece>();
+
         foreach (var piece in gamePieces.Values)
         {
-            AssignPieceType(piece.GetComponent<GamePiece>());
+            if (piece.TryGetComponent<GamePiece>(out GamePiece gp))
+            {
+                tempPieces.Add(gp);
+            }
         }
+
+        tempPieces.Shuffle();
+
+        foreach (var piece in tempPieces)
+        {
+            AssignPieceType(piece);
+            yield return new WaitForSeconds(0.01f);
+        }
+
+        if (GameObject.FindWithTag("Player").TryGetComponent<PlayerController>(out PlayerController pc))
+        {
+            pc.SetLockout(false);
+        }
+
+        boardReset = null;
     }
 
     private void AssignPieceType(GamePiece pieceData)
@@ -168,16 +204,17 @@ public class GameBoard : MonoBehaviour
 
         pieceData.SetPieceType(randomPieceType);
 
-        if (pieceData.FindHorizontalMatches().Count > 1)
+        for (int i = 0; i < 10; i++)
         {
-            PieceTypes newRandomPiece = ScrambleMatchedPiece(pieceData.GetPieceType());
-            pieceData.SetPieceType(newRandomPiece);
-        }
-
-        if (pieceData.FindVerticalMatches().Count > 1)
-        {
-            PieceTypes newRandomPiece = ScrambleMatchedPiece(pieceData.GetPieceType());
-            pieceData.SetPieceType(newRandomPiece);
+            if (pieceData.FindHorizontalMatches().Count < Settings.howManyInAMatch - 1 && 
+                pieceData.FindVerticalMatches().Count < Settings.howManyInAMatch - 1)
+            {
+                break;
+            } else
+            {
+                PieceTypes newRandomPiece = ScrambleMatchedPiece(pieceData.GetPieceType());
+                pieceData.SetPieceType(newRandomPiece);
+            }
         }
     }
 
