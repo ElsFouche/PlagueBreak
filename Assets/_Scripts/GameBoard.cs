@@ -44,8 +44,12 @@ public class GameBoard : MonoBehaviour
         // Debug.Log("Screen to world point width,height: " + Camera.main.ScreenToWorldPoint(new Vector3(width, height, 10.0f)));
 
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireCube(transform.position, new Vector3(Camera.main.orthographicSize * 2 * Camera.main.aspect * width,
+        if (Camera.main != null)
+        {
+            Gizmos.DrawWireCube(transform.position, new Vector3(Camera.main.orthographicSize * 2 * Camera.main.aspect * width,
                                                             Camera.main.orthographicSize * 2 * Camera.main.aspect * height, 0.0f));
+        } 
+
         for (int row = 0; row < divisions; row++)
         {
             for (int col = 0; col < divisions; col++)
@@ -55,7 +59,7 @@ public class GameBoard : MonoBehaviour
                 Gizmos.DrawCube(new Vector3(
                     boardStartPosition.x + (col * cellSize.x) + (cellSize.x / 2), 
                     boardStartPosition.y + (row * cellSize.y) + (cellSize.y / 2),
-                    transform.position.z), 
+                    transform.position.z),
                     new Vector3(gamePieceWidth*cellSize.x, gamePieceHeight*cellSize.y, 0.0f));
             }
         }
@@ -249,11 +253,19 @@ public class GameBoard : MonoBehaviour
 
     private Vector2 BoardStartPosition()
     {
+        if (Camera.main == null)
+        {
+            return Vector2.zero;
+        }
         return new Vector2((transform.position.x - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / 2), 
                            (transform.position.y - Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / 2));
     }
     private Vector2 CellSize()
     {
+        if (Camera.main == null)
+        {
+            return Vector2.zero;
+        }
         return new Vector2(Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)width / divisions, 
                            Camera.main.orthographicSize * 2 * Camera.main.aspect * (float)height / divisions);
     }
