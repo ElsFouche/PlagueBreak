@@ -107,7 +107,7 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
                 break;
             case E_LevelType.Boss:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_03"));
                 break;
             default:
                 break;
