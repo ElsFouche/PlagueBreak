@@ -59,6 +59,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     private void OnDrawGizmos()
     {
         if (Application.isPlaying) return;
+
         Gizmos.DrawIcon(transform.position, "EnemyHandler", true, Color.magenta);
         foreach (var spawnPoint in spawnPoints)
         {
