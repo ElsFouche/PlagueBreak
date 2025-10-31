@@ -10,12 +10,13 @@ public class SaveData
     // Upgrade Data
     public int playerDamageBoost;
     public int playerHealthBoost;
+    public int playerDamageMultiplier;
 
     // Currency
     public int crystals;
 
     // Clicked Buttons
-    public List<string> clickedButtons;
+    public List<F_Buttons> clickedButtons;
 
     public SaveData()
     {
@@ -24,9 +25,10 @@ public class SaveData
 
         playerDamageBoost = 0;
         playerHealthBoost = 0;
+        playerDamageMultiplier = 0;
 
         crystals = 0;
 
-        clickedButtons = new List<string> { "NULL" };
+        clickedButtons = new List<F_Buttons> { new F_Buttons("NULL", 0)};
     }
 }
