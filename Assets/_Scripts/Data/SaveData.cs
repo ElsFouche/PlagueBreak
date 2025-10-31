@@ -3,6 +3,9 @@ using System.Collections.Generic;
 [System.Serializable]
 public class SaveData
 {
+    // Settings
+    public float volume = 1.0f;
+
     // Levels 
     public List<string> completedLevels;
     public string currentLevel;

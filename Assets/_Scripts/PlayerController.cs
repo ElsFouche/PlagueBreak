@@ -15,6 +15,9 @@ public class PlayerController : TouchHandling , ISaveLoad
     private float damagePerMatch = 3.0f;
     [SerializeField]
     private RectTransform playerHealthBar;
+    [Header("Audio Settings")]
+    [SerializeField] private AudioHandler audioHandler;
+    [SerializeField] private AudioClip matchMade;
 
     // Private
       // Game Board & Pieces
@@ -43,6 +46,14 @@ public class PlayerController : TouchHandling , ISaveLoad
         saveData = SaveManager.instance.GetSaveData();
         damagePerMatch *= (1 + ( (float)saveData.playerDamageBoost / 100) );
         playerHealth *= (1 + ( (float)saveData.playerHealthBoost / 100) );
+
+        if (audioHandler == null)
+        {
+            if (TryGetComponent<AudioHandler>(out AudioHandler ah))
+            {
+                this.audioHandler = ah;
+            }
+        }
     }
 
     /// <summary>
@@ -199,6 +210,8 @@ public class PlayerController : TouchHandling , ISaveLoad
                               Mathf.Max(touchedVerticalMatches - (Settings.howManyInAMatch - 1), 0) + 
                               Mathf.Max(touchedHorizontalMatches - (Settings.howManyInAMatch - 1), 0));
                 HarmEnemiesFromMatchCount(damage);
+
+                audioHandler.PlayAudio(matchMade, 5);
             } else
             {
                 board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());

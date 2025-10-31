@@ -82,6 +82,8 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
                 asyncLevelOp = StartCoroutine(LoadLevelAsync("MainMenu"));
                 break;
             case E_LevelType.Settings:
+                SaveLevelID(newLevelID);
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("SettingsMenu"));
                 break;
             case E_LevelType.Shop:
                 break;
