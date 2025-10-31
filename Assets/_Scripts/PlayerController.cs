@@ -226,6 +226,7 @@ public class PlayerController : TouchHandling , ISaveLoad
         // game's difficulty. Per the below formula, when the player reaches 5 matches they
         // deal double damage. 
         float finalDamage = (damagePerMatch * (float)(1.0f + ((matches - 1) / 5.0f)));
+        finalDamage *= (1.0f + (float)saveData.playerDamageMultiplier / 100.0f);
         Debug.Log("Damage dealt: " + finalDamage);
         enemyHandler.DealDamage(finalDamage);
     }
