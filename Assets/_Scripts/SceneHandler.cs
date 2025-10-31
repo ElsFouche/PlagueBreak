@@ -77,7 +77,13 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
         {
             case E_LevelType.None:
                 break;
+            case E_LevelType.MainMenu:
+                SaveLevelID(newLevelID);
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("MainMenu"));
+                break;
             case E_LevelType.Settings:
+                SaveLevelID(newLevelID);
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("SettingsMenu"));
                 break;
             case E_LevelType.Shop:
                 break;
@@ -95,7 +101,7 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
                 break;
             case E_LevelType.Normal:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_04"));
                 break;
             case E_LevelType.Hard:
                 SaveLevelID(newLevelID);
@@ -103,11 +109,24 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
                 break;
             case E_LevelType.Boss:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_03"));
                 break;
             default:
                 break;
         }
+    }
+
+    public void LoadLevelFromName(string name, string newLevelID)
+    {
+        if (asyncLevelOp != null)
+        {
+            Debug.Log("Async level operation: " + asyncLevelOp + "\nis currently running. Unable to load.");
+            return;
+        }
+
+        SaveLevelID(newLevelID);
+
+        asyncLevelOp = StartCoroutine(LoadLevelAsync(name));
     }
 
     private IEnumerator LoadLevelAsync(string levelName, bool unloadPrevious = true)

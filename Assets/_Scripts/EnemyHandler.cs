@@ -23,12 +23,25 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     [Header("Enemy Waves")]
     [SerializeField] private int numWaves = 1;
     [SerializeField] private List<Vector3> spawnPoints  = new();
-    [Header("Enemies")]
+    [Header("Enemy Stats")]
     [SerializeField] private List<F_EnemyData> enemies = new();
 
+    [Header("Display Elements")]
     [SerializeField] private RectTransform waveHealthBar;
     [SerializeField] private TMP_Text waveCount;
     [SerializeField] private Image timeToNextAttackUI;
+
+    [Header("Audio")]
+    [Tooltip("Add the reference to the audio handler script here.")]
+    [SerializeField] private AudioHandler audioHandler;
+    [Tooltip("Add audio clips here.")]
+    [SerializeField] private AudioClip zombieAttack;
+    [Tooltip("Add audio clips here.")]
+    [SerializeField] private AudioClip zombieDamaged;
+    [Tooltip("Add audio clips here.")]
+    [SerializeField] private AudioClip zombieDeath;
+    [Tooltip("Add audio clips here.")]
+    [SerializeField] private AudioClip victory;
 
     [Header("Enemy Appearance")]
     [SerializeField] private List<GameObject> basicEnemies = new();
@@ -38,11 +51,13 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
     // Hidden
     [HideInInspector] public float difficultyMod = 1;
+        // Local Data
     private float currWaveHealth;
     private float maxWaveHealth;
     private float attackDamage;
     private int currWave = 1, enemiesInWave;
     private Dictionary<int, GameObject> spawnedEnemies = new();
+        // Reference to gameboard
     private GameBoard gameBoard;
         // Reference to player
     private PlayerController playerController;
@@ -52,6 +67,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     private float updateFrequency = 0.01f;
         // Coroutine Lockouts
     private Coroutine CR_HarmPlayer = null;
+    private Coroutine CR_HarmPaused = null;
 
     /// <summary>
     /// Debug gizmos to show enemy spawn locations.
@@ -59,6 +75,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     private void OnDrawGizmos()
     {
         if (Application.isPlaying) return;
+
         Gizmos.DrawIcon(transform.position, "EnemyHandler", true, Color.magenta);
         foreach (var spawnPoint in spawnPoints)
         {
@@ -87,6 +104,14 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             Application.Quit();
         }
 
+        if (audioHandler == null)
+        {
+            if (TryGetComponent<AudioHandler>(out AudioHandler audio))
+            {
+                this.audioHandler = audio;
+            }
+        }
+
         saveData = SaveManager.instance.GetSaveData();
 
         StartWave();
@@ -100,7 +125,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         maxWaveHealth = WaveHealthTotal(difficultyMod);
         currWaveHealth = maxWaveHealth;
         attackDamage = 0;
-        int index = 0;
+        int enemyCount = 0;
 
         UpdateHealthDisplay();
         UpdateWaveCount();
@@ -109,18 +134,59 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         // Currently only spawns basic enemies. 
         foreach (var spawnPoint in spawnPoints)
         {
-            if (index < basicEnemies.Count)
+            int bossIndex = enemies.FindIndex(s => s.enemyType == E_EnemyTypes.EnemyType.Boss);
+            F_EnemyData enemyToSpawn = new F_EnemyData();
+            if (bossIndex < 0)
             {
-                spawnedEnemies.Add(index,
-                    Instantiate(
-                    basicEnemies[UnityEngine.Random.Range(0, basicEnemies.Count - 1)],
-                    spawnPoint,
-                    Quaternion.identity)
-                    );
+                enemyToSpawn = enemies[UnityEngine.Random.Range(0, enemies.Count - 1)];
+            } else
+            {
+                enemyToSpawn = enemies[bossIndex];
             }
-            index++;
+
+            switch (enemyToSpawn.enemyType)
+            {
+                case E_EnemyTypes.EnemyType.None:
+                    GameObject tempEnemy = new();
+                    break;
+                case E_EnemyTypes.EnemyType.Basic:
+                    tempEnemy = Instantiate(
+                        basicEnemies[UnityEngine.Random.Range(0, basicEnemies.Count - 1)],
+                        spawnPoint,
+                        Quaternion.identity);
+                    tempEnemy.transform.parent = transform;
+                    spawnedEnemies.Add(enemyCount, tempEnemy);
+                    break;
+                case E_EnemyTypes.EnemyType.GlassCannon:
+                    tempEnemy = Instantiate(
+                        glassCannons[UnityEngine.Random.Range(0, glassCannons.Count - 1)],
+                        spawnPoint,
+                        Quaternion.identity);
+                    tempEnemy.transform.parent = transform;
+                    spawnedEnemies.Add(enemyCount, tempEnemy);
+                    break;
+                case E_EnemyTypes.EnemyType.Tank:
+                    tempEnemy = Instantiate(
+                        tanks[UnityEngine.Random.Range(0, tanks.Count - 1)],
+                        spawnPoint,
+                        Quaternion.identity);
+                    tempEnemy.transform.parent = transform;
+                    spawnedEnemies.Add(enemyCount, tempEnemy);
+                    break;
+                case E_EnemyTypes.EnemyType.Boss:
+                    tempEnemy = Instantiate(
+                        bosses[UnityEngine.Random.Range(0, bosses.Count - 1)],
+                        spawnPoint,
+                        Quaternion.identity);
+                    tempEnemy.transform.parent = transform;
+                    spawnedEnemies.Add(enemyCount, tempEnemy);
+                    break;
+                default:
+                    break;
+            }
+            enemyCount++;
         }
-        enemiesInWave = index;
+        enemiesInWave = enemyCount;
 
         WaveDamageTotal();
 
@@ -133,7 +199,6 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         currWave++;
         gameBoard.ResetBoard();
         UpdateWaveCount();
-        timeToNextAttackUI.fillAmount = 1.0f;
         StartWave();
     }
     
@@ -151,6 +216,8 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         currWaveHealth = Mathf.Floor(Mathf.Clamp(currWaveHealth - damage, 0, maxWaveHealth));
 
         UpdateHealthDisplay();
+
+        audioHandler.PlayAudio(zombieDamaged, 1);
 
         // If the percent of the wave health is less than the percent of remaining enemies...
         // num of spawned enemies / (enemies in wave + 1) because it offsets the breakpoints where
@@ -170,25 +237,56 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
             Destroy(spawnedEnemies[destroyEnemyAtIndex]);
             spawnedEnemies.Remove(destroyEnemyAtIndex);
+
+            audioHandler.PlayAudio(zombieDeath, 2);
         }
 
         if (spawnedEnemies.Count == 0 && currWave < numWaves)
         {
+            EarnCrystals();
             NextWave();
         } else if (spawnedEnemies.Count == 0 && currWave >= numWaves) {
+            EarnCrystals(0.25f);
             LevelComplete();
         }
     }
 
     private void LevelComplete()
     {
-        Debug.Log("Level Complete!");
+        audioHandler.PlayAudio(victory, 11);
+
+        // Debug.Log("Level Complete!");
         if (!saveData.completedLevels.Contains(saveData.currentLevel))
         {
             saveData.completedLevels.Add(saveData.currentLevel);
         }
         SceneHandler.instance.LoadLevelFromLevelType(E_LevelType.LevelSelect, "LevelSelect");
     }
+
+    private void EarnCrystals(float bonusChance = 0.0f)
+    {
+        int crystalsDropped = 0;
+
+        for (int i = 0; i < Settings.numCrystalsDropChances; i++)
+        {
+            if (UnityEngine.Random.Range(0.0f, 1.0f) > (Settings.crystalDropChance + bonusChance))
+            {
+                crystalsDropped++;
+            }
+        }
+
+        if (crystalsDropped < Settings.minCrystalsDropped)
+        {
+            crystalsDropped = Settings.minCrystalsDropped;
+        }
+
+        saveData.crystals += crystalsDropped;
+
+        CurrencyDisplay currencyDisplay = (CurrencyDisplay)FindFirstObjectByType(typeof(CurrencyDisplay));
+        currencyDisplay.UpdateText();
+    }
+
+    // ---------------Wave Data Calculations---------------
 
     private float WaveHealthTotal(float modifier)
     {
@@ -208,6 +306,8 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         }
     }
 
+    // ---------------Updates---------------
+
     public void UpdateWaveCount(string text = "")
     {
         string waveText = "Wave: " + currWave + " / " + numWaves;
@@ -221,6 +321,8 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             waveHealthBar.localScale = new Vector3(currWaveHealth / maxWaveHealth, 1.0f, 1.0f);
         }
     }
+
+    // ---------------Harming the Player---------------
 
     private void OnApplicationPause(bool pause)
     {
@@ -247,6 +349,14 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     /// </summary>
     private void StartPlayerHarmLoop()
     {
+        if (CR_HarmPaused != null)
+        {
+            StopCoroutine(CR_HarmPaused);
+            CR_HarmPaused = null;
+        }
+
+        timeToNextAttackUI.fillAmount = 1.0f;
+        
         if (CR_HarmPlayer != null)
         {
             StopCoroutine(CR_HarmPlayer);
@@ -259,7 +369,12 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
     private IEnumerator HarmPlayer()
     { 
-        // If no countdown UI, skip decrementing the and instead wait directly. 
+        if (CR_HarmPaused != null)
+        {
+            StopCoroutine(CR_HarmPlayer);
+        }
+
+        // If no countdown UI, skip decrementing and instead wait directly. 
         if (!timeToNextAttackUI)
         {
             Debug.Log("No attack UI found. Are you sure you set up the scene correctly?");
@@ -285,10 +400,13 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             }
 
             playerController.TakeDamage(attackDamage);
+
+            audioHandler.PlayAudio(zombieAttack);
+
             timeToNextAttackUI.fillAmount = 1.0f;
 
             // Pass control to harm paused
-            StartCoroutine(HarmPausedIndicator(Settings.playerISeconds));
+            CR_HarmPaused = StartCoroutine(HarmPausedIndicator(Settings.playerISeconds));
         }
     }
 
@@ -331,12 +449,16 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         // reset UI
         timeToNextAttackUI.fillAmount = 1.0f;
 
+        CR_HarmPaused = null;
+
         // Reinitialize player harm loop?
         StartPlayerHarmLoop();
     }
 
-    // Interfaces
-      // ISaveLoad
+    // ---------------Interfaces---------------
+
+    // ---------------ISaveLoad---------------
+
     /// <summary>
     /// This method is called in each interface member whenever data is loaded. 
     /// </summary>

@@ -23,10 +23,11 @@ public class PauseMenu : MonoBehaviour
     }
     //Used to exit the scene and move to the start of the main menu
     public void Exit() 
-    { 
+    {
         //Example of the code for now, will wait for a later sprint to apply to the main game, but cod is in place for now
-
-        SceneManager.LoadScene("MainMenu");
+        SceneHandler.instance.LoadLevelFromLevelType(E_LevelType.MainMenu, "MainMenu");
+        // Edited by Els, 10/21/2025, to bring in line with the level management system. 
+        // SceneManager.LoadScene("MainMenu");
         Time.timeScale = 1;
     }
 }
