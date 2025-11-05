@@ -401,7 +401,14 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
             playerController.TakeDamage(attackDamage);
 
+            // Audio Feedback
             audioHandler.PlayAudio(zombieAttack);
+
+            // Touch Feedback
+            if (Vibration.HasVibrator())
+            {
+                Vibration.Vibrate(Settings.takeDamageVibrationMilliseconds);
+            }
 
             timeToNextAttackUI.fillAmount = 1.0f;
 

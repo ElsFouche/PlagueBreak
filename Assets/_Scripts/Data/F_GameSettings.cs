@@ -11,4 +11,7 @@ public class F_GameSettings
     public const float crystalDropChance = 0.25f;
     public const int numCrystalsDropChances = 3;
     public const int minCrystalsDropped = 0;
+
+    public const int touchVibrationMilliseconds = 15;
+    public const int takeDamageVibrationMilliseconds = 30;
 }
