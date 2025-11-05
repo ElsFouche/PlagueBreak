@@ -3,9 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UI;
 using Settings = F_GameSettings;
 
 /// <summary>
@@ -23,14 +21,14 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     [SerializeField] private float timeBetweenAttacks;
     [Header("Enemy Waves")]
     [SerializeField] private int numWaves = 1;
-    [SerializeField] private List<Vector3> spawnPoints  = new();
+    [SerializeField] private List<Transform> spawnPoints  = new();
     [Header("Enemy Stats")]
     [SerializeField] private List<F_EnemyData> enemies = new();
 
     [Header("Display Elements")]
     [SerializeField] private RectTransform waveHealthBar;
     [SerializeField] private TMP_Text waveCount;
-    [SerializeField] private Image timeToNextAttackUI;
+    [SerializeField] private UnityEngine.UI.Image timeToNextAttackUI;
 
     [Header("Audio")]
     [Tooltip("Add the reference to the audio handler script here.")]
@@ -80,7 +78,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         Gizmos.DrawIcon(transform.position, "EnemyHandler", true, Color.magenta);
         foreach (var spawnPoint in spawnPoints)
         {
-            Gizmos.DrawWireCube(spawnPoint, new Vector3(0.5f, 0.5f, 0.5f));
+            Gizmos.DrawWireCube(spawnPoint.position, new Vector3(0.5f, 0.5f, 0.5f));
         }
     }
 
@@ -161,32 +159,36 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
                 case E_EnemyTypes.EnemyType.Basic:
                     tempEnemy = Instantiate(
                         basicEnemies[UnityEngine.Random.Range(0, basicEnemies.Count - 1)],
-                        spawnPoint,
-                        Quaternion.identity);
+                        spawnPoint.position,
+                        spawnPoint.rotation);
+                    // tempEnemy.transform.localScale = spawnPoint.localScale;
                     tempEnemy.transform.parent = transform;
                     spawnedEnemies.Add(enemyCount, tempEnemy);
                     break;
                 case E_EnemyTypes.EnemyType.GlassCannon:
                     tempEnemy = Instantiate(
                         glassCannons[UnityEngine.Random.Range(0, glassCannons.Count - 1)],
-                        spawnPoint,
-                        Quaternion.identity);
+                        spawnPoint.position,
+                        spawnPoint.rotation);
+                    // tempEnemy.transform.localScale = spawnPoint.localScale;
                     tempEnemy.transform.parent = transform;
                     spawnedEnemies.Add(enemyCount, tempEnemy);
                     break;
                 case E_EnemyTypes.EnemyType.Tank:
                     tempEnemy = Instantiate(
                         tanks[UnityEngine.Random.Range(0, tanks.Count - 1)],
-                        spawnPoint,
-                        Quaternion.identity);
+                        spawnPoint.position,
+                        spawnPoint.rotation);
+                    // tempEnemy.transform.localScale = spawnPoint.localScale;
                     tempEnemy.transform.parent = transform;
                     spawnedEnemies.Add(enemyCount, tempEnemy);
                     break;
                 case E_EnemyTypes.EnemyType.Boss:
                     tempEnemy = Instantiate(
                         bosses[UnityEngine.Random.Range(0, bosses.Count - 1)],
-                        spawnPoint,
-                        Quaternion.identity);
+                        spawnPoint.position,
+                        spawnPoint.rotation);
+                    // tempEnemy.transform.localScale = spawnPoint.localScale;
                     tempEnemy.transform.parent = transform;
                     spawnedEnemies.Add(enemyCount, tempEnemy);
                     break;
@@ -309,6 +311,10 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
                 if (!saveData.unlockedLevels.Contains("Level_05"))
                 {
                     saveData.unlockedLevels.Add("Level_05");
+                }
+                if (!saveData.unlockedLevels.Contains("Level_06"))
+                {
+                    saveData.unlockedLevels.Add("Level_06");
                 }
                 break;
             case "Level_05":
