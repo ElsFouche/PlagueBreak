@@ -79,37 +79,37 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
                 break;
             case E_LevelType.MainMenu:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("MainMenu"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.mainMenu));
                 break;
             case E_LevelType.Settings:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("SettingsMenu"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.settingsMenu));
                 break;
             case E_LevelType.Shop:
                 break;
             case E_LevelType.SpecialShop:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("CrystalShop"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.crystalShop));
                 break;
             case E_LevelType.LevelSelect:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("LevelSelect"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelSelect));
                 break;
             case E_LevelType.Easy:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelEasy));
                 break;
             case E_LevelType.Normal:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_04"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelNormal));
                 break;
             case E_LevelType.Hard:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelHard));
                 break;
             case E_LevelType.Boss:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_03"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelBoss));
                 break;
             default:
                 break;

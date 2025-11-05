@@ -85,7 +85,7 @@ public class PlayerController_Menus : TouchHandling
         {
             string levelID = button.GetComponent<LevelSelectButton>().levelID;
 
-            if (saveData.completedLevels.Contains(levelID))
+            if (!saveData.unlockedLevels.Contains(levelID))
             {
                 button.interactable = false;
             }

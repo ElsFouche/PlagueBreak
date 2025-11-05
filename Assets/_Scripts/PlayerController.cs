@@ -183,7 +183,10 @@ public class PlayerController : TouchHandling , ISaveLoad
         // If not adjacent, return the piece and exit. 
         if (!isAdjacent)
         {
-            StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
+            if (this.isActiveAndEnabled)
+            {
+                StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
+            }
             return;
         }
         else
@@ -265,6 +268,8 @@ public class PlayerController : TouchHandling , ISaveLoad
                 Debug.Log("Game over.");
                 // This should be updated to use the Scene Handler and death should be
                 // implemented thoughtfully. 
+                saveData.unlockedLevels.Clear();
+                saveData.unlockedLevels = Settings.defaultUnlockedLevels;
                 SceneHandler.instance.LoadLevelFromName("GameOver", "GameOver");
             } else
             {
