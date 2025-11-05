@@ -1,16 +1,17 @@
 using UnityEngine;
+using System.Collections.Generic;
 
-
+/// <summary>
+/// This script is largely unnecessary but functionality from the Enemy Handler 
+/// could be moved here in order to decompose it into more discrete chunks.
+/// </summary>
 public class LevelComplete : MonoBehaviour
 {
     [Header("Level Complete Functions")]
     [Tooltip("This script is called whenever a level is completed. \n" +
              "These variables determine the effects per-level.")]
-    [SerializeField] 
-    private bool resetMapProgress;
-    private int bonusCrystals;
-
-    [HideInInspector]
+    [SerializeField] private int bonusCrystals;
+    
     private SaveData saveData;
 
     private void Awake()
@@ -20,10 +21,6 @@ public class LevelComplete : MonoBehaviour
 
     public void OnLevelComplete()
     {
-        if (resetMapProgress)
-        {
-            saveData.completedLevels.Clear();
-        }
 
         if (bonusCrystals > 0)
         {

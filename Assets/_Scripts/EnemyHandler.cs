@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using Settings = F_GameSettings;
@@ -51,16 +52,16 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
     // Hidden
     [HideInInspector] public float difficultyMod = 1;
-        // Local Data
+        // Level Data
     private float currWaveHealth;
     private float maxWaveHealth;
     private float attackDamage;
     private int currWave = 1, enemiesInWave;
     private Dictionary<int, GameObject> spawnedEnemies = new();
-        // Reference to gameboard
+        // References
     private GameBoard gameBoard;
-        // Reference to player
     private PlayerController playerController;
+    private LevelComplete levelComplete;
         // Data Management
     private SaveData saveData = new();
         // Player harm loop settings
@@ -103,6 +104,14 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
+        if (GameObject.FindGameObjectWithTag("LevelComplete").TryGetComponent<LevelComplete>(out LevelComplete lc))
+        {
+            levelComplete = lc;
+        } else if (levelComplete == null)
+        {
+            levelComplete = Instantiate(new GameObject("LevelComplete")).AddComponent<LevelComplete>();
+        }
+
 
         if (audioHandler == null)
         {
@@ -255,11 +264,93 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     {
         audioHandler.PlayAudio(victory, 11);
 
+        levelComplete.OnLevelComplete();
+
         // Debug.Log("Level Complete!");
-        if (!saveData.completedLevels.Contains(saveData.currentLevel))
+        // Unlock next levels
+        switch (saveData.currentLevel)
         {
-            saveData.completedLevels.Add(saveData.currentLevel);
+            case "Level_01":
+                if (saveData.unlockedLevels.Count > 0)
+                {
+                    saveData.unlockedLevels.Clear();
+                }
+                saveData.unlockedLevels.Add("Level_02");
+                saveData.unlockedLevels.Add("Level_03");
+                break;
+            case "Level_02":
+                if (saveData.unlockedLevels.Contains("Level_02"))
+                {
+                    saveData.unlockedLevels.Remove("Level_02");
+                }
+                // Only add the next level if it doesn't exist yet. 
+                if (!saveData.unlockedLevels.Contains("Level_04"))
+                {
+                    saveData.unlockedLevels.Add("Level_04");
+                }
+                break;
+            case "Level_03":
+                if (saveData.unlockedLevels.Contains("Level_03"))
+                {
+                    saveData.unlockedLevels.Remove("Level_03");
+                }
+                // Only add the next level if it doesn't exist yet.
+                if (!saveData.unlockedLevels.Contains("Level_04"))
+                {
+                    saveData.unlockedLevels.Add("Level_04");
+                }
+                break;
+            case "Level_04":
+                if (saveData.unlockedLevels.Contains("Level_04"))
+                {
+                    saveData.unlockedLevels.Remove("Level_04");
+                }
+                // Only add the next level if it doesn't exist yet.
+                if (!saveData.unlockedLevels.Contains("Level_05"))
+                {
+                    saveData.unlockedLevels.Add("Level_05");
+                }
+                break;
+            case "Level_05":
+                if (saveData.unlockedLevels.Contains("Level_05"))
+                {
+                    saveData.unlockedLevels.Remove("Level_05");
+                }
+                // Only add the next level if both boss prereq levels have finished.
+                if (saveData.unlockedLevels.Contains("BossPrereq1") && !saveData.unlockedLevels.Contains("Level_07"))
+                {
+                    saveData.unlockedLevels.Add("Level_07");
+                } else
+                {
+                    saveData.unlockedLevels.Add("BossPrereq2");
+                }
+                break;
+            case "Level_06":
+                if (saveData.unlockedLevels.Contains("Level_06"))
+                {
+                    saveData.unlockedLevels.Remove("Level_06");
+                }
+                // Only add the next level if both boss prereq levels have finished.
+                if (saveData.unlockedLevels.Contains("BossPrereq2") && !saveData.unlockedLevels.Contains("Level_07"))
+                {
+                    saveData.unlockedLevels.Add("Level_07");
+                }
+                else
+                {
+                    saveData.unlockedLevels.Add("BossPrereq1");
+                }
+                break;
+            case "Level_07":
+                if (saveData.unlockedLevels.Count > 0)
+                {
+                    saveData.unlockedLevels.Clear();
+                }
+                saveData.unlockedLevels.Add("Level_01");
+                break;
+            default:
+                break;
         }
+
         SceneHandler.instance.LoadLevelFromLevelType(E_LevelType.LevelSelect, "LevelSelect");
     }
 

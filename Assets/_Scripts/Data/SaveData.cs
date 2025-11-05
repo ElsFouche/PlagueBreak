@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 [System.Serializable]
 public class SaveData
@@ -7,7 +8,7 @@ public class SaveData
     public float volume = 1.0f;
 
     // Levels 
-    public List<string> completedLevels;
+    public List<string> unlockedLevels;
     public string currentLevel;
 
     // Upgrade Data
@@ -23,7 +24,7 @@ public class SaveData
 
     public SaveData()
     {
-        completedLevels = new List<string> { "NULL" };
+        unlockedLevels = new List<string> (F_GameSettings.defaultUnlockedLevels);
         currentLevel = "";
 
         playerDamageBoost = 0;

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class F_GameSettings
@@ -14,4 +15,17 @@ public class F_GameSettings
 
     public const int touchVibrationMilliseconds = 15;
     public const int takeDamageVibrationMilliseconds = 30;
+
+    // Level Names
+    public const string mainMenu = "MainMenu";
+    public const string settingsMenu = "SettingsMenu";
+    public const string crystalShop = "CrystalShop";
+    public const string levelSelect = "LevelSelect";
+    public const string levelEasy = "Level_00";
+    public const string levelNormal = "Level_04";
+    public const string levelHard = "Level_00";
+    public const string levelBoss = "Level_03";
+    public static readonly List<string> defaultUnlockedLevels = new List<string> {
+            "Level_01"
+    };
 }
