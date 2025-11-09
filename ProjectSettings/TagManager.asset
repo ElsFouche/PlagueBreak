@@ -9,6 +9,7 @@ TagManager:
   - LevelSelectButton
   - SaveSystem
   - EventSystem
+  - LevelComplete
   layers:
   - Default
   - TransparentFX

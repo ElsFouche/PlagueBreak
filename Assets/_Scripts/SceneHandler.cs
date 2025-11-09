@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using Unity.Properties;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Settings = F_GameSettings;
@@ -79,36 +77,56 @@ public class SceneHandler : MonoBehaviour, ISaveLoad
         {
             case E_LevelType.None:
                 break;
+            case E_LevelType.MainMenu:
+                SaveLevelID(newLevelID);
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.mainMenu));
+                break;
             case E_LevelType.Settings:
+                SaveLevelID(newLevelID);
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.settingsMenu));
                 break;
             case E_LevelType.Shop:
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
                 break;
             case E_LevelType.SpecialShop:
+                SaveLevelID(newLevelID);
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.crystalShop));
                 break;
             case E_LevelType.LevelSelect:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("LevelSelect"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelSelect));
                 break;
             case E_LevelType.Easy:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelEasy));
                 break;
             case E_LevelType.Normal:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelNormal));
                 break;
             case E_LevelType.Hard:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelHard));
                 break;
             case E_LevelType.Boss:
                 SaveLevelID(newLevelID);
-                asyncLevelOp = StartCoroutine(LoadLevelAsync("Level_00"));
+                asyncLevelOp = StartCoroutine(LoadLevelAsync(Settings.levelBoss));
                 break;
             default:
                 break;
         }
+    }
+
+    public void LoadLevelFromName(string name, string newLevelID)
+    {
+        if (asyncLevelOp != null)
+        {
+            Debug.Log("Async level operation: " + asyncLevelOp + "\nis currently running. Unable to load.");
+            return;
+        }
+
+        SaveLevelID(newLevelID);
+
+        asyncLevelOp = StartCoroutine(LoadLevelAsync(name));
     }
 
     private IEnumerator LoadLevelAsync(string levelName, bool unloadPrevious = true)

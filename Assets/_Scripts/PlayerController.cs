@@ -1,5 +1,4 @@
 using System.Collections;
-using UnityEditor.Overlays;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -7,7 +6,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using Settings = F_GameSettings;
 
-public class PlayerController : MonoBehaviour , ISaveLoad
+public class PlayerController : TouchHandling , ISaveLoad
 {
     // Public
     [Header("Player Settings")]
@@ -16,83 +15,65 @@ public class PlayerController : MonoBehaviour , ISaveLoad
     private float damagePerMatch = 3.0f;
     [SerializeField]
     private RectTransform playerHealthBar;
+    [Header("Audio Settings")]
+    [SerializeField] private AudioHandler audioHandler;
+    [SerializeField] private AudioClip matchMade;
 
     // Private
-    // Touch Data
-    private Vector2 touchStartPos = new(0.0f, 0.0f), touchEndPos = new(0.0f, 0.0f);
-    // Input System
-    private PlayerInput playerInput;
-    private InputAction screenTouched;
-    private InputAction touchPosition;
-    // Game Board & Pieces
+      // Game Board & Pieces
     private GameBoard board;
     private GameObject heldPiece;
     private GamePiece heldPieceData;
-    // Enemies
+    private bool controlLockout = false; 
+      // Enemies
     private EnemyHandler enemyHandler;
-    // Player
+      // Player Data
     private float playerHealth = Settings.playerHealthMax;
     private bool bIsInvincible = false;
     private Coroutine CR_InvincibleTimer = null;
-    // Save Info
+      // Save Data
     private SaveData saveData;
     
-    private void Awake()
+    new private void Awake()
     {
-        playerInput = GetComponent<PlayerInput>();
-        if (playerInput == null)
-        {
-            Debug.Log("Fatal: Player input module not found.");
-            Destroy(this);
-        }
-        screenTouched = playerInput.actions["Main/ScreenTouched"];
-        touchPosition = playerInput.actions["Main/TouchLocation"];
+        base.Awake();
 
         if (!playerHealthBar)
         {
             Debug.Log("No player health bar found.");
         }
 
-        if (playerInput)
-        {
-            // If no camera has been set, use the main camera. 
-            if (!playerInput.camera)
-            {
-                playerInput.camera = Camera.main;
-            }
+        saveData = SaveManager.instance.GetSaveData();
+        damagePerMatch *= (1 + ( (float)saveData.playerDamageBoost / 100) );
+        playerHealth *= (1 + ( (float)saveData.playerHealthBoost / 100) );
 
-            // If no UI Input Module has been set, attempt to load it from the current event system. 
-            if (playerInput.uiInputModule == null)
+        if (audioHandler == null)
+        {
+            if (TryGetComponent<AudioHandler>(out AudioHandler ah))
             {
-                if (EventSystem.current.TryGetComponent<InputSystemUIInputModule>(out InputSystemUIInputModule playerInput))
-                {
-                    Debug.Log("Player UI input module loaded from current event system.");
-                }
+                this.audioHandler = ah;
             }
         }
     }
-    private void OnEnable()
-    {
-        screenTouched.started += TouchStarted;
-        screenTouched.canceled += TouchEnded;
-    }
-    private void OnDisable()
-    {
-        screenTouched.started -= TouchStarted;
-        screenTouched.canceled -= TouchEnded;
-    }
 
+    /// <summary>
+    /// Retrieve references to the game board and the enemy handler. 
+    /// </summary>
     private void Start()
     {
-        board = GameObject.FindGameObjectWithTag("GameBoard").GetComponent<GameBoard>();
-        if (!board)
+        if (GameObject.FindGameObjectWithTag("GameBoard").TryGetComponent(out GameBoard gb))
+        {
+            board = gb;
+        } else
         {
             Debug.Log("Fatal: Game board not found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
 
-        enemyHandler = GameObject.FindGameObjectWithTag("EnemySystem").GetComponent<EnemyHandler>();
-        if (!enemyHandler)
+        if (GameObject.FindGameObjectWithTag("EnemySystem").TryGetComponent<EnemyHandler>(out EnemyHandler eh))
+        {
+            enemyHandler = eh;
+        } else
         {
             Debug.Log("Fatal: No enemy handler found. Are you sure you set up the scene correctly?");
             Application.Quit();
@@ -110,14 +91,22 @@ public class PlayerController : MonoBehaviour , ISaveLoad
         }
     }
 
+    // ---------------Input---------------
+
     /// <summary>
     /// On finger down:
     /// - Attempts to retrieve the game piece at the touch position. 
     /// </summary>
     /// <param name="context"></param>
-    private void TouchStarted(InputAction.CallbackContext context)
+    protected override void TouchStarted(InputAction.CallbackContext ctx)
     {
-        touchStartPos = GetFingerPosition();
+        base.TouchStarted(ctx);
+        if (controlLockout)
+        {
+            if (heldPiece) { heldPieceData.ReturnPiece(); }
+            heldPiece = null;
+            return;
+        }
 
         heldPiece = GetPieceTouched(touchStartPos);
         if (heldPiece != null)
@@ -132,8 +121,18 @@ public class PlayerController : MonoBehaviour , ISaveLoad
     /// - 
     /// </summary>
     /// <param name="context"></param>
-    private void TouchEnded(InputAction.CallbackContext context)
+    protected override void TouchEnded(InputAction.CallbackContext context)
     {
+        if (controlLockout && !heldPiece)
+        {
+            return; 
+        } else if (controlLockout)
+        {
+            heldPieceData.ReturnPiece();
+            heldPiece = null;
+            return;
+        }
+
         if (heldPiece)
         {
             touchEndPos = GetFingerPosition();
@@ -184,7 +183,10 @@ public class PlayerController : MonoBehaviour , ISaveLoad
         // If not adjacent, return the piece and exit. 
         if (!isAdjacent)
         {
-            StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
+            if (this.isActiveAndEnabled)
+            {
+                StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
+            }
             return;
         }
         else
@@ -211,6 +213,8 @@ public class PlayerController : MonoBehaviour , ISaveLoad
                               Mathf.Max(touchedVerticalMatches - (Settings.howManyInAMatch - 1), 0) + 
                               Mathf.Max(touchedHorizontalMatches - (Settings.howManyInAMatch - 1), 0));
                 HarmEnemiesFromMatchCount(damage);
+
+                audioHandler.PlayAudio(matchMade, 5);
             } else
             {
                 board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
@@ -219,17 +223,35 @@ public class PlayerController : MonoBehaviour , ISaveLoad
         }
     }
 
-    // Damage formula
+    public void SetLockout(bool locked)
+    {
+        controlLockout = locked;
+    }
+
+    // ---------------Combat---------------
+
+    /// <summary>
+    /// This method allows the player to deal damage to enemies.
+    /// The damage dealt is adjusted based on the number of pieces
+    /// in a completed match. 
+    /// </summary>
+    /// <param name="matches"></param>
     private void HarmEnemiesFromMatchCount(int matches)
     {
         // 5 is a magic number and should be expose to allow for designer control of the
         // game's difficulty. Per the below formula, when the player reaches 5 matches they
         // deal double damage. 
         float finalDamage = (damagePerMatch * (float)(1.0f + ((matches - 1) / 5.0f)));
+        finalDamage *= (1.0f + (float)saveData.playerDamageMultiplier / 100.0f);
         Debug.Log("Damage dealt: " + finalDamage);
         enemyHandler.DealDamage(finalDamage);
     }
 
+    /// <summary>
+    /// This method allows the player to take damage from enemies. 
+    /// It includes an invulnerability check and a death check. 
+    /// </summary>
+    /// <param name="damage"></param>
     public void TakeDamage(float damage)
     {
         if (bIsInvincible)
@@ -244,7 +266,11 @@ public class PlayerController : MonoBehaviour , ISaveLoad
             if (playerHealth <= 0.0f)
             {
                 Debug.Log("Game over.");
-                SceneManager.LoadScene(sceneName: "GameOver");
+                // This should be updated to use the Scene Handler and death should be
+                // implemented thoughtfully. 
+                saveData.unlockedLevels.Clear();
+                saveData.unlockedLevels = Settings.defaultUnlockedLevels;
+                SceneHandler.instance.LoadLevelFromName("GameOver", "GameOver");
             } else
             {
                 if (CR_InvincibleTimer != null)
@@ -267,23 +293,6 @@ public class PlayerController : MonoBehaviour , ISaveLoad
         {
             playerHealthBar.localScale = new Vector3(playerHealth / Settings.playerHealthMax, 1.0f, 1.0f);
         }
-    }
-
-    /// <summary>
-    /// Returns the world position found at the touch point 
-    /// based on the projection from the main camera. Dependant
-    /// on the player input camera being set up. The main camera's
-    /// Z value can impact this method. 
-    /// </summary>
-    /// <returns></returns>
-    private Vector3 GetFingerPosition()
-    {
-        Vector3 position = playerInput.camera.ScreenToWorldPoint(
-                                            new Vector3(touchPosition.ReadValue<Vector2>().x,
-                                                        touchPosition.ReadValue<Vector2>().y,
-                                                        playerInput.camera.transform.position.z * -1.0f));
-        position.z = transform.position.z;
-        return position;
     }
 
     /// <summary>
@@ -317,8 +326,9 @@ public class PlayerController : MonoBehaviour , ISaveLoad
         bIsInvincible = false;
     }
 
-    // Interfaces
-      // ISaveLoad
+    // ---------------Interfaces---------------
+
+    // ISaveLoad
     /// <summary>
     /// This method is called in each interface member whenever data is loaded. 
     /// </summary>
@@ -336,7 +346,8 @@ public class PlayerController : MonoBehaviour , ISaveLoad
         // savedData.whatever = whatever new
     }
 
-    // Debug
+    // ---------------Debug---------------
+
     private IEnumerator WigglePiece(GameObject piece)
     {
         for (int i = 0; i < 4; i++)
