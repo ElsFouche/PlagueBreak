@@ -5,6 +5,9 @@ using PieceTypes = E_PieceTypes.PieceType;
 
 public class GamePiece : MonoBehaviour
 {
+    [SerializeField] private List<Material> materials = new();
+    [SerializeField] private GameObject matchMadeParticles;
+
     private GameBoard gameBoard;
     private Vector3 originalPosition;
     private Quaternion originalRotation;
@@ -12,7 +15,8 @@ public class GamePiece : MonoBehaviour
     private PieceTypes pieceType;
     private List<Vector2> horizontalMatches = new();
     private List<Vector2> verticalMatches = new();
-    [SerializeField] private List<Material> materials = new();
+    private Coroutine CR_PieceReturn = null;
+    
 
     // Getters
 
@@ -45,9 +49,9 @@ public class GamePiece : MonoBehaviour
     {
         return verticalMatches;
     }
-
     
     // Setters
+
     public void SetGameBoard(GameBoard newGameBoard)
     {
         this.gameBoard = newGameBoard;
@@ -192,23 +196,48 @@ public class GamePiece : MonoBehaviour
 
     // Methods
 
-    public IEnumerator ReturnPiece(float time = 1.0f)
+    public IEnumerator ReturnPiece(float time = F_GameSettings.pieceReturnTimeDefault, bool checkForMatches = false)
     {
+        if (CR_PieceReturn == null)
+        {
+            CR_PieceReturn = StartCoroutine(PieceReturn(time, checkForMatches));
+        }
+
+        yield return null;
+    }
+
+    public IEnumerator PieceReturn(float time = F_GameSettings.pieceReturnTimeDefault, bool checkForMatches = false)
+    {
+        float startTime = Time.time;
+        float timeRemaining = 0.0f;
+
         while (Vector3.Distance(transform.position, GetOriginalPosition()) > 0.0001f)
         {
+            timeRemaining = (Time.time - startTime) / time;
             // Debug.Log("Piece position: " + transform.position);
             // Debug.Log("Original position: " + GetOriginalPosition());
             // Debug.Log("Distance remaining: " + Vector3.Distance(transform.position, GetOriginalPosition()));
 
             transform.position = new Vector3(
-                                     Mathf.SmoothStep(transform.position.x, GetOriginalPosition().x, time),
-                                     Mathf.SmoothStep(transform.position.y, GetOriginalPosition().y, time),
-                                     Mathf.SmoothStep(transform.position.z, GetOriginalPosition().z, time));
+                                     Mathf.SmoothStep(transform.position.x, GetOriginalPosition().x, timeRemaining),
+                                     Mathf.SmoothStep(transform.position.y, GetOriginalPosition().y, timeRemaining),
+                                     Mathf.SmoothStep(transform.position.z, GetOriginalPosition().z, timeRemaining));
 
 
             yield return new WaitForFixedUpdate();
         }
 
+        if (checkForMatches)
+        {
+            yield return new WaitForEndOfFrame();
+            FindHorizontalMatches(this);
+            FindVerticalMatches(this);
+            gameBoard.GetPlayerController().HarmEnemiesFromMatchCount(verticalMatches.Count, F_GameSettings.autoMatchDamageMultiplier);
+            gameBoard.GetPlayerController().HarmEnemiesFromMatchCount(horizontalMatches.Count, F_GameSettings.autoMatchDamageMultiplier);
+            StartCoroutine(MatchMade());
+        }
+
+        CR_PieceReturn = null;
         yield return null;
     }
 
@@ -332,12 +361,35 @@ public class GamePiece : MonoBehaviour
     {
         yield return new WaitForFixedUpdate();
 
+        List<GamePiece> piecesInMatch = new();
+
         if (horizontalMatches.Count > 2)
         {
             // Debug
             foreach (Vector2 tempKey in horizontalMatches)
             {
-                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().SetPieceType(PieceTypes.None);
+                if (SaveManager.instance.GetSaveData().isHardMode)
+                {
+                    gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().SetPieceType(PieceTypes.None);
+                } else
+                {
+                    GamePiece temp = gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>();
+                    temp.SetPieceType(PieceTypes.None);
+                    if (!piecesInMatch.Contains(temp))
+                    {
+                        piecesInMatch.Add(temp);
+                    }
+                }
+
+                if (matchMadeParticles != null)
+                {
+                    Instantiate(matchMadeParticles, new Vector3(
+                                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().GetOriginalPosition().x,
+                                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().GetOriginalPosition().y,
+                                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().GetOriginalPosition().z - 1.0f),
+                                Quaternion.identity);
+                    matchMadeParticles.GetComponent<ParticleSystem>().Play();
+                }
             }
         }
 
@@ -346,13 +398,58 @@ public class GamePiece : MonoBehaviour
             // Debug
             foreach (Vector2 tempKey in verticalMatches)
             {
-                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().SetPieceType(PieceTypes.None);
+                if (SaveManager.instance.GetSaveData().isHardMode)
+                {
+                    gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().SetPieceType(PieceTypes.None);
+                }
+                else
+                {
+                    GamePiece temp = gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>();
+                    temp.SetPieceType(PieceTypes.None);
+                    if (!piecesInMatch.Contains(temp))
+                    {
+                        piecesInMatch.Add(temp);
+                    }
+                }
+                
+                if (matchMadeParticles != null)
+                {
+                    Instantiate(matchMadeParticles, new Vector3(
+                                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().GetOriginalPosition().x,
+                                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().GetOriginalPosition().y,
+                                gameBoard.GridCoordToGamePiece(tempKey).GetComponent<GamePiece>().GetOriginalPosition().z - 1.0f), 
+                                Quaternion.identity);
+                    matchMadeParticles.GetComponent<ParticleSystem>().Play();
+                }
             }
         }
 
-        if (horizontalMatches.Count > 2 || verticalMatches.Count > 2)
+        // Do stuff if we're in a matched set. 
+        if (horizontalMatches.Count >= F_GameSettings.howManyInAMatch || 
+            verticalMatches.Count >= F_GameSettings.howManyInAMatch)
         {
-            SetPieceType(PieceTypes.None);
+            
+            if (matchMadeParticles != null)
+            {
+                Instantiate(matchMadeParticles, new Vector3(this.GetOriginalPosition().x, this.GetOriginalPosition().y, this.GetOriginalPosition().z - 1.0f), Quaternion.identity);
+                matchMadeParticles.GetComponent<ParticleSystem>().Play();
+            }
+
+            if (SaveManager.instance.GetSaveData().isHardMode)
+            {
+                SetPieceType(PieceTypes.None);
+            } else
+            {
+                SetPieceType(PieceTypes.None);
+                if (!piecesInMatch.Contains(this))
+                {
+                    piecesInMatch.Add(this);
+                }
+                foreach (var piece in piecesInMatch)
+                {
+                    gameBoard.AddPiecesToDrop(piece);
+                }
+            }
         }
     }
 }
