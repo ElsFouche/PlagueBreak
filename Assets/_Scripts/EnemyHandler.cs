@@ -208,7 +208,10 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     {
         difficultyMod += difficultyMod * 0.1f;
         currWave++;
-        gameBoard.ResetBoard();
+        if (saveData.isHardMode)
+        {
+            gameBoard.ResetBoard();
+        }
         UpdateWaveCount();
         StartWave();
     }

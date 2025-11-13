@@ -6,6 +6,7 @@ public class SaveData
 {
     // Settings
     public float volume = 1.0f;
+    public bool isHardMode = false;
 
     // Levels 
     public List<string> unlockedLevels;

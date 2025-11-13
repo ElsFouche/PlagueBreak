@@ -171,6 +171,10 @@ PrefabInstance:
       propertyPath: destroyOnAwake
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6816030910584332606, guid: 55bdc6a7a15c12745bbf285d72fdd45d, type: 3}
+      propertyPath: destroyAfterSeconds
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6857885610770275175, guid: 55bdc6a7a15c12745bbf285d72fdd45d, type: 3}
       propertyPath: m_Name
       value: Main Camera

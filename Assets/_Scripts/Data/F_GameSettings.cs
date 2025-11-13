@@ -3,16 +3,21 @@ using UnityEngine;
 
 public class F_GameSettings
 {
+    // Gameplay settings
     public const int howManyInAMatch = 3;
     public const float playerHealthMax = 50.0f;
     public const float playerISeconds = 3.0f;
-
-    public const string defaultProfileName = "Default";
-
     public const float crystalDropChance = 0.25f;
     public const int numCrystalsDropChances = 3;
     public const int minCrystalsDropped = 0;
+    public const float newPieceSpawnOffset = 5.0f;
+    public const float autoMatchDamageMultiplier = 0.1f;
+    public const float pieceReturnTimeDefault = 1.0f;
 
+    // Save data settings
+    public const string defaultProfileName = "Default";
+
+    // Touch vibration settings
     public const int touchVibrationMilliseconds = 15;
     public const int takeDamageVibrationMilliseconds = 30;
 

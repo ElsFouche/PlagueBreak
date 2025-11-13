@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using PieceTypes = E_PieceTypes.PieceType;
 using Settings = F_GameSettings;
@@ -29,6 +30,12 @@ public class GameBoard : MonoBehaviour
     private List<PieceTypes> generatedPieces = new();
     private Dictionary<Vector2, GameObject> gamePieces;
     private Coroutine boardReset = null;
+    private PlayerController playerController;
+    // Piece Dropping
+    private List<GamePiece> matchedPieces = new();
+    private Coroutine CR_WaitToDrop = null;
+
+    // Visualization 
 
     private void OnValidate()
     {
@@ -73,11 +80,38 @@ public class GameBoard : MonoBehaviour
         gamePieces = new Dictionary<Vector2, GameObject>();
         boardStartPosition = BoardStartPosition();
         cellSize = CellSize();
+        GameObject tempPlayer = GameObject.FindGameObjectWithTag("Player");
+        if (tempPlayer != null)
+        {
+            if (GameObject.FindWithTag("Player").TryGetComponent<PlayerController>(out PlayerController pc))
+            {
+                playerController = pc;
+            } else
+            {
+                // Debug.LogError("Fatal: Object tagged as 'Player' does not have a player controller script.");
+                // Application.Quit();
+            }
+        } else
+        {
+            // Debug.LogError("Fatal: Object tagged as 'Player' does not have a player controller script.");
+            // Application.Quit();
+        }
     }
 
     private void Start()
     {
         StartCoroutine(SpawnGamePieces());
+    }
+
+    public PlayerController GetPlayerController()
+    {
+        if (playerController == null)
+        {
+            return null; 
+        } else
+        {
+            return playerController;
+        }
     }
 
     private IEnumerator SpawnGamePieces()
@@ -126,16 +160,23 @@ public class GameBoard : MonoBehaviour
         yield return null;
     }
 
+    // This will need to be wrapped into some sort of difficulty setting after
+    // accounting for the new piece replacement setup.
+    // Currently it is called when a wave is completed. Eliminate that call unless the game is in hard mode.
+
+    /// <summary>
+    /// This function initiates a coroutine that scrambles all the pieces on
+    /// the game board. 
+    /// </summary>
     public void ResetBoard()
     {
-        if (GameObject.FindWithTag("Player").TryGetComponent<PlayerController>(out PlayerController pc))
+        // Prevent player control until after the board has reset.
+        playerController.SetLockout(true);
+        
+        // Check if coroutine is active to prevent double activation.
+        if (boardReset == null)
         {
-            pc.SetLockout(true);
-            
-            if (boardReset == null)
-            {
-                boardReset = StartCoroutine(SlowBoardReset());
-            }
+            boardReset = StartCoroutine(SlowBoardReset());
         }
     }
 
@@ -159,26 +200,38 @@ public class GameBoard : MonoBehaviour
             yield return new WaitForSeconds(0.01f);
         }
 
-        if (GameObject.FindWithTag("Player").TryGetComponent<PlayerController>(out PlayerController pc))
-        {
-            pc.SetLockout(false);
-        }
+        // Return player control.
+        playerController.SetLockout(false);
 
+        // Release coroutine lockout.
         boardReset = null;
     }
 
-    private void AssignPieceType(GamePiece pieceData)
+    /// <summary>
+    /// Randomizes the piece passed as input. If randomPiece is 
+    /// set to true this will be truly random. If set false or unset
+    /// the piece will be generated pseudo-randomly. 
+    /// </summary>
+    /// <param name="pieceData"></param>
+    /// <param name="randomPiece"></param>
+    private void AssignPieceType(GamePiece pieceData, bool randomPiece = false)
     {
         if (potentialPieces.Count < 1)
         {
             potentialPieces.Add(PieceTypes.Red);
-            Debug.Log("Piece types not set for the level. Remember to set up the game state completely!");
+            // Debug.Log("Piece types not set for the level. Remember to set up the game state completely!");
         }
 
         // Assign a pseudo-random piece type
         // Generate a piece using a new random value. 
         int rndIndex = UnityEngine.Random.Range(0, potentialPieces.Count);
         PieceTypes randomPieceType = potentialPieces[rndIndex];
+        
+        if (randomPiece)
+        {
+            pieceData.SetPieceType(randomPieceType);
+            return;
+        }
 
         /*
         /// The below functionality checks to ensure pieces are random
@@ -236,6 +289,10 @@ public class GameBoard : MonoBehaviour
         return newRandomPiece;
     }
 
+    /// <summary>
+    /// This function is used as a check to prevent generating pre-existing matches.
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator PopulateMatches()
     {
         List<GameObject> pieces = new List<GameObject>(gamePieces.Values); 
@@ -327,13 +384,46 @@ public class GameBoard : MonoBehaviour
 
         List<Vector2> adjacentCoords = new()
         {
+            // North / Vertical Up
             new Vector2(coordCenter.x, coordCenter.y + 1),
+            // East / Horizontal Right
             new Vector2(coordCenter.x + 1, coordCenter.y),
+            // South / Vertical Down
             new Vector2(coordCenter.x, coordCenter.y - 1),
+            // West / Horizontal Left
             new Vector2(coordCenter.x - 1, coordCenter.y)
         };
         
         return adjacentCoords;
+    }
+
+    public GamePiece GetVerticalNeighbor(Vector2 piecePosition)
+    {
+        GameObject tempPieceObj = GridCoordToGamePiece(new Vector2(piecePosition.x, piecePosition.y + 1));
+
+        if (tempPieceObj == null)
+        {
+            return null;
+        }
+
+        GamePiece tempPieceData; 
+
+        if (tempPieceObj.TryGetComponent<GamePiece>(out GamePiece gp))
+        {
+            tempPieceData = gp;
+        } else
+        {
+            tempPieceData = null;
+        }
+
+        return tempPieceData;
+    }
+
+    public GamePiece GetVerticalNeighbor(GamePiece startPiece)
+    {
+        Vector2 startPieceLocation = WorldPositionToGrid(startPiece.GetOriginalPosition());
+
+        return GetVerticalNeighbor(startPieceLocation);
     }
 
 
@@ -355,14 +445,18 @@ public class GameBoard : MonoBehaviour
         return new Vector2(-1,-1);
     }
 
+    // Piece Swapping
+
     /// <summary>
-    /// Swaps the game pieces at the input positions, if found.
-    /// Returns true if successful. 
-    /// Input values must be world position, not grid space.
+    /// Swaps the supplied game piece locations. Supplied locations must be in world space!
+    /// Game pieces have their home location updated. The game board's dictionary is updated 
+    /// with the new pieces based on their new home location. Returns true if successful.
     /// </summary>
     /// <param name="pieceA"></param>
     /// <param name="pieceB"></param>
-    public bool SwapPieces(Vector2 pieceA, Vector2 pieceB)
+    /// <param name="returnPieces"></param>
+    /// <returns></returns>
+    public bool SwapPieces(Vector2 pieceA, Vector2 pieceB, bool returnPieces = true)
     {
         // Convert input values to grid space. 
         pieceA = WorldPositionToGrid(pieceA);
@@ -371,53 +465,37 @@ public class GameBoard : MonoBehaviour
         GamePiece pieceAData = gamePieces[pieceA].GetComponent<GamePiece>();
         GamePiece pieceBData = gamePieces[pieceB].GetComponent<GamePiece>();
 
-        // Return valid game pieces if the other piece is not and exit.
-        if (pieceAData == null)
-        {
-            if (pieceBData == null)
-            {
-                Debug.Log("Invalid game pieces, cannot swap.");
-                return false;
-            } else {
-                StartCoroutine(pieceBData.ReturnPiece());
-                Debug.Log("Invalid game piece A, cannot swap.");
-                return false;
-            }
-        } 
-        else if (pieceBData == null) 
-        {
-            StartCoroutine(pieceAData.ReturnPiece());
-            Debug.Log("Invalid game piece B, cannot swap.");
-            return false;
-        }
-
-        // Update game board's knowledge of swapped pieces
-        GameObject objectA = GridCoordToGamePiece(pieceA);
-        gamePieces[pieceA] = GridCoordToGamePiece(pieceB);
-        gamePieces[pieceB] = objectA;
-        
-        // Swap resting positions
-        var posA = pieceAData.GetOriginalPosition();
-        pieceAData.SetNewPosition(pieceBData.GetOriginalPosition());
-        pieceBData.SetNewPosition(posA);
-
-        // Visually put pieces in new positions
-        StartCoroutine(pieceAData.ReturnPiece(0.4f));
-        StartCoroutine(pieceBData.ReturnPiece(0.4f));
-
-        return true;
+        return SwapPieces(pieceAData, pieceBData, returnPieces);
     }
 
     /// <summary>
-    /// Swaps the input game objects. Returns true if successful.
+    /// Swaps the supplied game pieces. Game pieces have their home location
+    /// updated. The game board's dictionary is updated with the new pieces based on
+    /// their new home location. Returns true if successful. 
     /// </summary>
     /// <param name="pieceA"></param>
     /// <param name="pieceB"></param>
-    public bool SwapPieces(GameObject pieceA, GameObject pieceB)
+    /// <param name="returnPieces"></param>
+    /// <returns></returns>
+    public bool SwapPieces(GameObject pieceA, GameObject pieceB, bool returnPieces = true)
     {
         GamePiece pieceAData = pieceA.GetComponent<GamePiece>();
         GamePiece pieceBData = pieceB.GetComponent<GamePiece>();
 
+        return SwapPieces(pieceAData, pieceBData, returnPieces);
+    }
+
+    /// <summary>
+    /// Swaps the supplied game pieces. Game pieces have their home location
+    /// updated. The game board's dictionary is updated with the new pieces based on
+    /// their new home location. Returns true if successful. 
+    /// </summary>
+    /// <param name="pieceAData"></param>
+    /// <param name="pieceBData"></param>
+    /// <param name="returnPieces"></param>
+    /// <returns></returns>
+    public bool SwapPieces(GamePiece pieceAData, GamePiece pieceBData, bool returnPieces = true)
+    {
         // Return valid game pieces if the other piece is not. 
         if (pieceAData == null)
         {
@@ -440,21 +518,141 @@ public class GameBoard : MonoBehaviour
             return false;
         }
 
+        // ------------------Swap------------------ 
+
         // Update game board's knowledge of swapped pieces
-        GameObject objectA = pieceA;
-        gamePieces[WorldPositionToGrid(pieceAData.GetOriginalPosition())] = pieceB;
+        GameObject objectA = pieceAData.gameObject;
+        gamePieces[WorldPositionToGrid(pieceAData.GetOriginalPosition())] = pieceBData.gameObject;
         gamePieces[WorldPositionToGrid(pieceBData.GetOriginalPosition())] = objectA;
-               
+
         // Swap resting positions
         var posA = pieceAData.GetOriginalPosition();
         pieceAData.SetNewPosition(pieceBData.GetOriginalPosition());
         pieceBData.SetNewPosition(posA);
 
-        // Visually put pieces in new positions
-        StartCoroutine(pieceAData.ReturnPiece(0.4f));
-        StartCoroutine(pieceBData.ReturnPiece(0.4f));
+        if (returnPieces)
+        {
+            // Visually put pieces in new positions
+            StartCoroutine(pieceAData.ReturnPiece(0.4f));
+            StartCoroutine(pieceBData.ReturnPiece(0.4f));
+        }
 
         return true;
+    }
+
+    public void AddPiecesToDrop(GamePiece pieceInMatch, int waitTime = 1)
+    {
+        // Add Unique (how tf is this not built in?)
+        if (!matchedPieces.Contains(pieceInMatch))
+        {
+            matchedPieces.Add(pieceInMatch);
+        }
+
+        // Wait while pieces accumulate in the list 
+        if (CR_WaitToDrop == null)
+        {
+            CR_WaitToDrop = StartCoroutine(WaitToDrop(waitTime));
+        }
+    }
+
+    private IEnumerator WaitToDrop(int framesUntilDrop = 1)
+    {
+        int temp = 0;
+        while (temp < framesUntilDrop)
+        {
+            yield return new WaitForEndOfFrame();
+            temp++;
+        }
+
+        DropPieces();
+        CR_WaitToDrop = null;
+    }
+
+    private void DropPieces()
+    {
+        List<GamePiece> nullPieces = new(matchedPieces);
+        // Remove all null pieces from the list 
+        foreach (var piece in nullPieces)
+        {
+            if (piece.GetPieceType() != PieceTypes.None)
+            {
+                matchedPieces.Remove(piece);
+            }
+        }
+
+        // Release unnecessary memory
+        matchedPieces.TrimExcess();
+
+        List<GamePiece> swappedPieces = new();
+
+        GamePiece vertNeighbor;
+        
+        // Bubble algorithm: Move all matched pieces to the top of the column
+        foreach (var piece in matchedPieces)
+        {
+            // Add current piece to the list of pieces that will need to return home later
+            if (!swappedPieces.Contains(piece))
+            {
+                swappedPieces.Add(piece);
+            }
+
+            // Retrieve our vertical neighbor
+            vertNeighbor = GetVerticalNeighbor(piece);
+
+            // Bubble piece to the top of the column
+            while (vertNeighbor != null)
+            {
+                // Add the neighbor to the pieces that will need to be returned at the end. 
+                if (!swappedPieces.Contains(vertNeighbor))
+                {
+                    swappedPieces.Add(vertNeighbor);
+                }
+
+                // Attempt to swap the pieces. 
+                if (!SwapPieces(piece, vertNeighbor, false))
+                {
+                    Debug.LogError("Attempted to swap invalid pieces. How did this happen?");
+                    break; 
+                }
+
+                // Get our new neighbor
+                vertNeighbor = GetVerticalNeighbor(piece);
+            }
+
+            // Vertical neighbor is now null: We are at the top of the column.
+        }
+
+        // After bubbling all pieces to the top...
+        // 1) Assign them new piece types
+        // 2) Make them invisible
+        // 3) Move them up in Y 
+        foreach (var piece in matchedPieces)
+        {
+            // Assign a new random piece type. This may need to wait until after all pieces have been bubbled up
+            // by calling it during the foreach to return them home? 
+            AssignPieceType(piece, true);
+
+            // Set the piece invisible 
+            if (piece.gameObject.TryGetComponent<MeshRenderer>(out var renderer))
+            {
+                renderer.enabled = false;
+            }
+
+            // Move the piece up in Y so that it 'falls' into place when we return all the pieces.
+            Vector3 tempPos = piece.GetOriginalPosition();
+            piece.gameObject.transform.position = new Vector3(tempPos.x, tempPos.y + Settings.newPieceSpawnOffset, tempPos.z);
+        }
+
+        // Return all pieces home 
+        foreach (var piece in swappedPieces)
+        {
+            if (piece.gameObject.TryGetComponent<MeshRenderer>(out var renderer))
+            {
+                renderer.enabled = true;
+            }
+
+            StartCoroutine(piece.ReturnPiece(1.5f, true));
+        }
     }
 }
 
