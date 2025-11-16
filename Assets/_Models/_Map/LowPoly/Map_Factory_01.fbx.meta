@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 655875ff39707104bb79f02c3215f3c3
+guid: bf1c040229044cd438fbabfe75792193
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Zombie_UV
-    second: {fileID: 2100000, guid: 7c5fb00ce399efa45956aaed12cf1c60, type: 2}
+      name: Prop_Buildings_LowPolySet1
+    second: {fileID: 2100000, guid: 73be34a569fdfd3438c8e9673ac45e7e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -38,7 +38,7 @@ ModelImporter:
     isReadable: 0
   meshes:
     lODScreenPercentages: []
-    globalScale: 0.45
+    globalScale: 1
     meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
@@ -70,7 +70,7 @@ ModelImporter:
     secondaryUVMinLightmapResolution: 40
     secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
-    useFileScale: 0
+    useFileScale: 1
     strictVertexDataChecks: 0
   tangentSpace:
     normalSmoothAngle: 60
@@ -93,7 +93,7 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
-    globalScale: 0.45
+    globalScale: 1
     rootMotionBoneName: 
     hasTranslationDoF: 0
     hasExtraRoot: 0
