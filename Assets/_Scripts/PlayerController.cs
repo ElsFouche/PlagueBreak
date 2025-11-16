@@ -16,7 +16,6 @@ public class PlayerController : TouchHandling , ISaveLoad
     [SerializeField]
     private RectTransform playerHealthBar;
     [Header("Audio Settings")]
-    [SerializeField] private AudioHandler audioHandler;
     [SerializeField] private AudioClip matchMade;
 
     // Private
@@ -46,14 +45,6 @@ public class PlayerController : TouchHandling , ISaveLoad
         saveData = SaveManager.instance.GetSaveData();
         damagePerMatch *= (1 + ( (float)saveData.playerDamageBoost / 100) );
         playerHealth *= (1 + ( (float)saveData.playerHealthBoost / 100) );
-
-        if (audioHandler == null)
-        {
-            if (TryGetComponent<AudioHandler>(out AudioHandler ah))
-            {
-                this.audioHandler = ah;
-            }
-        }
     }
 
     /// <summary>
@@ -256,7 +247,7 @@ public class PlayerController : TouchHandling , ISaveLoad
             return;
         }
 
-        audioHandler.PlayAudio(matchMade, 5);
+        AudioHandler.instance.PlaySFXOverride(matchMade);
 
         // 5 is a magic number and should be expose to allow for designer control of the
         // game's difficulty. Per the below formula, when the player reaches 5 matches they

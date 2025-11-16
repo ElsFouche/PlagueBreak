@@ -12,7 +12,8 @@ public class SaveManager : MonoBehaviour
     private SaveData saveData;
     private List<ISaveLoad> subscribers = new();
     private SaveDataHandler dataHandler;
-
+    
+    // Singleton
     public static SaveManager instance { get; private set; }
 
     /// <summary>
@@ -90,6 +91,12 @@ public class SaveManager : MonoBehaviour
             }
         }
         dataHandler.SaveToFile(this.saveData);
+    }
+
+    public void DeleteSave(string profile = Settings.defaultProfileName)
+    {
+        dataHandler.DeleteFile(profile);
+        NewGame();
     }
 
     public ref SaveData GetSaveData()

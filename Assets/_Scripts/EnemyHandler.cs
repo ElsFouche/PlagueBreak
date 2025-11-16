@@ -31,8 +31,6 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     [SerializeField] private UnityEngine.UI.Image timeToNextAttackUI;
 
     [Header("Audio")]
-    [Tooltip("Add the reference to the audio handler script here.")]
-    [SerializeField] private AudioHandler audioHandler;
     [Tooltip("Add audio clips here.")]
     [SerializeField] private AudioClip zombieAttack;
     [Tooltip("Add audio clips here.")]
@@ -108,15 +106,6 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         } else if (levelComplete == null)
         {
             levelComplete = Instantiate(new GameObject("LevelComplete")).AddComponent<LevelComplete>();
-        }
-
-
-        if (audioHandler == null)
-        {
-            if (TryGetComponent<AudioHandler>(out AudioHandler audio))
-            {
-                this.audioHandler = audio;
-            }
         }
 
         saveData = SaveManager.instance.GetSaveData();
@@ -231,7 +220,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
         UpdateHealthDisplay();
 
-        audioHandler.PlayAudio(zombieDamaged, 1);
+        AudioHandler.instance.PlaySFX(zombieDamaged);
 
         // If the percent of the wave health is less than the percent of remaining enemies...
         // num of spawned enemies / (enemies in wave + 1) because it offsets the breakpoints where
@@ -252,7 +241,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             Destroy(spawnedEnemies[destroyEnemyAtIndex]);
             spawnedEnemies.Remove(destroyEnemyAtIndex);
 
-            audioHandler.PlayAudio(zombieDeath, 2);
+            AudioHandler.instance.PlaySFX(zombieDeath, 19);
         }
 
         if (spawnedEnemies.Count == 0 && currWave < numWaves)
@@ -267,7 +256,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
     private void LevelComplete()
     {
-        audioHandler.PlayAudio(victory, 11);
+        AudioHandler.instance.PlaySFX(victory, 09);
 
         levelComplete.OnLevelComplete();
 
@@ -502,7 +491,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             playerController.TakeDamage(attackDamage);
 
             // Audio Feedback
-            audioHandler.PlayAudio(zombieAttack);
+            AudioHandler.instance.PlaySFX(zombieAttack);
 
             // Touch Feedback
             if (Vibration.HasVibrator())

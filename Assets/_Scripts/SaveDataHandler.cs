@@ -124,4 +124,26 @@ public class SaveDataHandler
             Debug.LogError("An error occurred when trying to save data to file: " + fullPath + "\n" + e);
         }
     }
+
+    public bool DeleteFile(string profile)
+    {
+        string fullPath = Path.Combine(directoryPath, profile + ".json");
+        
+        if (File.Exists(fullPath))
+        {
+            try
+            {
+               File.Delete(fullPath);
+               return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Failed to delete file: " + fullPath + "\n" + e);
+                return false;
+            }
+        } else
+        {
+            return false;
+        }
+    }
 }
