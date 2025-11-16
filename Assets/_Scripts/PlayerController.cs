@@ -16,7 +16,6 @@ public class PlayerController : TouchHandling , ISaveLoad
     [SerializeField]
     private RectTransform playerHealthBar;
     [Header("Audio Settings")]
-    [SerializeField] private AudioHandler audioHandler;
     [SerializeField] private AudioClip matchMade;
 
     // Private
@@ -46,14 +45,6 @@ public class PlayerController : TouchHandling , ISaveLoad
         saveData = SaveManager.instance.GetSaveData();
         damagePerMatch *= (1 + ( (float)saveData.playerDamageBoost / 100) );
         playerHealth *= (1 + ( (float)saveData.playerHealthBoost / 100) );
-
-        if (audioHandler == null)
-        {
-            if (TryGetComponent<AudioHandler>(out AudioHandler ah))
-            {
-                this.audioHandler = ah;
-            }
-        }
     }
 
     /// <summary>
@@ -151,6 +142,7 @@ public class PlayerController : TouchHandling , ISaveLoad
                 return;
             }
 
+            SetLockout(true);
             CheckMatchesAfterMove(touchedPieceData);
         }
     }
@@ -175,7 +167,8 @@ public class PlayerController : TouchHandling , ISaveLoad
         {
             if (coord == board.WorldPositionToGrid(heldPieceData.GetOriginalPosition()))
             {
-                isAdjacent = true; 
+                isAdjacent = true;
+                SetLockout(false);
                 break;
             }
         }
@@ -183,41 +176,52 @@ public class PlayerController : TouchHandling , ISaveLoad
         // If not adjacent, return the piece and exit. 
         if (!isAdjacent)
         {
-            StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
+            if (this.isActiveAndEnabled)
+            {
+                StartCoroutine(heldPiece.GetComponent<GamePiece>().ReturnPiece(0.2f));
+            }
+            SetLockout(false);
             return;
         }
         else
         {
-            int heldHorizontalMatches, heldVerticalMatches, touchedHorizontalMatches, touchedVerticalMatches;
-
             board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
 
-            heldHorizontalMatches = heldPieceData.FindHorizontalMatches().Count;
-            heldVerticalMatches = heldPieceData.FindVerticalMatches().Count;
-            StartCoroutine(heldPieceData.MatchMade()); // Checks number of matches internally
-
-            touchedHorizontalMatches = swappedPiece.FindHorizontalMatches().Count;
-            touchedVerticalMatches = swappedPiece.FindVerticalMatches().Count;
-            StartCoroutine(swappedPiece.MatchMade()); // Checks number of matches internally
-
-            if (heldHorizontalMatches >= Settings.howManyInAMatch || heldVerticalMatches >= Settings.howManyInAMatch ||
-                touchedHorizontalMatches >= Settings.howManyInAMatch || touchedVerticalMatches >= Settings.howManyInAMatch)
-            {
-                // Determine the base damage from all the matches.
-                // Only count pieces beginning at the piece that made the match.
-                int damage = (Mathf.Max(heldHorizontalMatches - (Settings.howManyInAMatch - 1), 0) + 
-                              Mathf.Max(heldVerticalMatches - (Settings.howManyInAMatch - 1), 0) + 
-                              Mathf.Max(touchedVerticalMatches - (Settings.howManyInAMatch - 1), 0) + 
-                              Mathf.Max(touchedHorizontalMatches - (Settings.howManyInAMatch - 1), 0));
-                HarmEnemiesFromMatchCount(damage);
-
-                audioHandler.PlayAudio(matchMade, 5);
-            } else
-            {
-                board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
-                // Debug.Log("Pieces swapped back.");
-            }
+            StartCoroutine(CheckMatches(heldPieceData, swappedPiece));
         }
+    }
+
+    public IEnumerator CheckMatches(GamePiece heldPieceData, GamePiece swappedPiece)
+    {
+        // Wait for pieces to swap. 0.4 is magic - should be added to game settings? 
+        yield return new WaitForSeconds(0.4f);
+
+        int heldHorizontalMatches, heldVerticalMatches, touchedHorizontalMatches, touchedVerticalMatches;
+        
+        heldHorizontalMatches = heldPieceData.FindHorizontalMatches().Count;
+        heldVerticalMatches = heldPieceData.FindVerticalMatches().Count;
+        StartCoroutine(heldPieceData.MatchMade()); // Checks number of matches internally
+
+        touchedHorizontalMatches = swappedPiece.FindHorizontalMatches().Count;
+        touchedVerticalMatches = swappedPiece.FindVerticalMatches().Count;
+        StartCoroutine(swappedPiece.MatchMade()); // Checks number of matches internally
+
+        if (heldHorizontalMatches >= Settings.howManyInAMatch || heldVerticalMatches >= Settings.howManyInAMatch ||
+            touchedHorizontalMatches >= Settings.howManyInAMatch || touchedVerticalMatches >= Settings.howManyInAMatch)
+        {
+            HarmEnemiesFromMatchCount(heldHorizontalMatches);
+            HarmEnemiesFromMatchCount(heldVerticalMatches);
+            HarmEnemiesFromMatchCount(touchedHorizontalMatches);
+            HarmEnemiesFromMatchCount(touchedVerticalMatches);
+        }
+        else
+        {
+            board.SwapPieces(heldPieceData.GetOriginalPosition(), swappedPiece.GetOriginalPosition());
+            // Debug.Log("Pieces swapped back.");
+        }
+
+        yield return new WaitForSeconds(Settings.pieceReturnTimeDefault);
+        SetLockout(false);
     }
 
     public void SetLockout(bool locked)
@@ -233,14 +237,25 @@ public class PlayerController : TouchHandling , ISaveLoad
     /// in a completed match. 
     /// </summary>
     /// <param name="matches"></param>
-    private void HarmEnemiesFromMatchCount(int matches)
+    public void HarmEnemiesFromMatchCount(int matches, float additionalModifier = 1.0f)
     {
+        // Only begin counting a match for damage if it is greater than or equal to the number
+        // required for a match. 
+        matches = matches - (Settings.howManyInAMatch - 1);
+        if (matches <= 0)
+        {
+            return;
+        }
+
+        AudioHandler.instance.PlaySFXOverride(matchMade);
+
         // 5 is a magic number and should be expose to allow for designer control of the
         // game's difficulty. Per the below formula, when the player reaches 5 matches they
         // deal double damage. 
         float finalDamage = (damagePerMatch * (float)(1.0f + ((matches - 1) / 5.0f)));
         finalDamage *= (1.0f + (float)saveData.playerDamageMultiplier / 100.0f);
-        Debug.Log("Damage dealt: " + finalDamage);
+        finalDamage *= additionalModifier;
+        // Debug.Log("Damage dealt: " + finalDamage);
         enemyHandler.DealDamage(finalDamage);
     }
 
@@ -265,6 +280,8 @@ public class PlayerController : TouchHandling , ISaveLoad
                 Debug.Log("Game over.");
                 // This should be updated to use the Scene Handler and death should be
                 // implemented thoughtfully. 
+                saveData.unlockedLevels.Clear();
+                saveData.unlockedLevels = Settings.defaultUnlockedLevels;
                 SceneHandler.instance.LoadLevelFromName("GameOver", "GameOver");
             } else
             {

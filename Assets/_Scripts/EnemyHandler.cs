@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using Settings = F_GameSettings;
 
 /// <summary>
@@ -22,18 +21,16 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     [SerializeField] private float timeBetweenAttacks;
     [Header("Enemy Waves")]
     [SerializeField] private int numWaves = 1;
-    [SerializeField] private List<Vector3> spawnPoints  = new();
+    [SerializeField] private List<Transform> spawnPoints  = new();
     [Header("Enemy Stats")]
     [SerializeField] private List<F_EnemyData> enemies = new();
 
     [Header("Display Elements")]
     [SerializeField] private RectTransform waveHealthBar;
     [SerializeField] private TMP_Text waveCount;
-    [SerializeField] private Image timeToNextAttackUI;
+    [SerializeField] private UnityEngine.UI.Image timeToNextAttackUI;
 
     [Header("Audio")]
-    [Tooltip("Add the reference to the audio handler script here.")]
-    [SerializeField] private AudioHandler audioHandler;
     [Tooltip("Add audio clips here.")]
     [SerializeField] private AudioClip zombieAttack;
     [Tooltip("Add audio clips here.")]
@@ -51,16 +48,16 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
     // Hidden
     [HideInInspector] public float difficultyMod = 1;
-        // Local Data
+        // Level Data
     private float currWaveHealth;
     private float maxWaveHealth;
     private float attackDamage;
     private int currWave = 1, enemiesInWave;
     private Dictionary<int, GameObject> spawnedEnemies = new();
-        // Reference to gameboard
+        // References
     private GameBoard gameBoard;
-        // Reference to player
     private PlayerController playerController;
+    private LevelComplete levelComplete;
         // Data Management
     private SaveData saveData = new();
         // Player harm loop settings
@@ -79,7 +76,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         Gizmos.DrawIcon(transform.position, "EnemyHandler", true, Color.magenta);
         foreach (var spawnPoint in spawnPoints)
         {
-            Gizmos.DrawWireCube(spawnPoint, new Vector3(0.5f, 0.5f, 0.5f));
+            Gizmos.DrawWireCube(spawnPoint.position, new Vector3(0.5f, 0.5f, 0.5f));
         }
     }
 
@@ -103,13 +100,12 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             Debug.Log("Fatal: No player controller found. Are you sure you set up the scene correctly?");
             Application.Quit();
         }
-
-        if (audioHandler == null)
+        if (GameObject.FindGameObjectWithTag("LevelComplete").TryGetComponent<LevelComplete>(out LevelComplete lc))
         {
-            if (TryGetComponent<AudioHandler>(out AudioHandler audio))
-            {
-                this.audioHandler = audio;
-            }
+            levelComplete = lc;
+        } else if (levelComplete == null)
+        {
+            levelComplete = Instantiate(new GameObject("LevelComplete")).AddComponent<LevelComplete>();
         }
 
         saveData = SaveManager.instance.GetSaveData();
@@ -152,32 +148,36 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
                 case E_EnemyTypes.EnemyType.Basic:
                     tempEnemy = Instantiate(
                         basicEnemies[UnityEngine.Random.Range(0, basicEnemies.Count - 1)],
-                        spawnPoint,
-                        Quaternion.identity);
+                        spawnPoint.position,
+                        spawnPoint.rotation);
+                    // tempEnemy.transform.localScale = spawnPoint.localScale;
                     tempEnemy.transform.parent = transform;
                     spawnedEnemies.Add(enemyCount, tempEnemy);
                     break;
                 case E_EnemyTypes.EnemyType.GlassCannon:
                     tempEnemy = Instantiate(
                         glassCannons[UnityEngine.Random.Range(0, glassCannons.Count - 1)],
-                        spawnPoint,
-                        Quaternion.identity);
+                        spawnPoint.position,
+                        spawnPoint.rotation);
+                    // tempEnemy.transform.localScale = spawnPoint.localScale;
                     tempEnemy.transform.parent = transform;
                     spawnedEnemies.Add(enemyCount, tempEnemy);
                     break;
                 case E_EnemyTypes.EnemyType.Tank:
                     tempEnemy = Instantiate(
                         tanks[UnityEngine.Random.Range(0, tanks.Count - 1)],
-                        spawnPoint,
-                        Quaternion.identity);
+                        spawnPoint.position,
+                        spawnPoint.rotation);
+                    // tempEnemy.transform.localScale = spawnPoint.localScale;
                     tempEnemy.transform.parent = transform;
                     spawnedEnemies.Add(enemyCount, tempEnemy);
                     break;
                 case E_EnemyTypes.EnemyType.Boss:
                     tempEnemy = Instantiate(
                         bosses[UnityEngine.Random.Range(0, bosses.Count - 1)],
-                        spawnPoint,
-                        Quaternion.identity);
+                        spawnPoint.position,
+                        spawnPoint.rotation);
+                    // tempEnemy.transform.localScale = spawnPoint.localScale;
                     tempEnemy.transform.parent = transform;
                     spawnedEnemies.Add(enemyCount, tempEnemy);
                     break;
@@ -197,7 +197,10 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     {
         difficultyMod += difficultyMod * 0.1f;
         currWave++;
-        gameBoard.ResetBoard();
+        if (saveData.isHardMode)
+        {
+            gameBoard.ResetBoard();
+        }
         UpdateWaveCount();
         StartWave();
     }
@@ -217,7 +220,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
         UpdateHealthDisplay();
 
-        audioHandler.PlayAudio(zombieDamaged, 1);
+        AudioHandler.instance.PlaySFX(zombieDamaged);
 
         // If the percent of the wave health is less than the percent of remaining enemies...
         // num of spawned enemies / (enemies in wave + 1) because it offsets the breakpoints where
@@ -238,7 +241,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             Destroy(spawnedEnemies[destroyEnemyAtIndex]);
             spawnedEnemies.Remove(destroyEnemyAtIndex);
 
-            audioHandler.PlayAudio(zombieDeath, 2);
+            AudioHandler.instance.PlaySFX(zombieDeath, 19);
         }
 
         if (spawnedEnemies.Count == 0 && currWave < numWaves)
@@ -253,13 +256,99 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
     private void LevelComplete()
     {
-        audioHandler.PlayAudio(victory, 11);
+        AudioHandler.instance.PlaySFX(victory, 09);
+
+        levelComplete.OnLevelComplete();
 
         // Debug.Log("Level Complete!");
-        if (!saveData.completedLevels.Contains(saveData.currentLevel))
+        // Unlock next levels
+        switch (saveData.currentLevel)
         {
-            saveData.completedLevels.Add(saveData.currentLevel);
+            case "Level_01":
+                if (saveData.unlockedLevels.Count > 0)
+                {
+                    saveData.unlockedLevels.Clear();
+                }
+                saveData.unlockedLevels.Add("Level_02");
+                saveData.unlockedLevels.Add("Level_03");
+                break;
+            case "Level_02":
+                if (saveData.unlockedLevels.Contains("Level_02"))
+                {
+                    saveData.unlockedLevels.Remove("Level_02");
+                }
+                // Only add the next level if it doesn't exist yet. 
+                if (!saveData.unlockedLevels.Contains("Level_04"))
+                {
+                    saveData.unlockedLevels.Add("Level_04");
+                }
+                break;
+            case "Level_03":
+                if (saveData.unlockedLevels.Contains("Level_03"))
+                {
+                    saveData.unlockedLevels.Remove("Level_03");
+                }
+                // Only add the next level if it doesn't exist yet.
+                if (!saveData.unlockedLevels.Contains("Level_04"))
+                {
+                    saveData.unlockedLevels.Add("Level_04");
+                }
+                break;
+            case "Level_04":
+                if (saveData.unlockedLevels.Contains("Level_04"))
+                {
+                    saveData.unlockedLevels.Remove("Level_04");
+                }
+                // Only add the next level if it doesn't exist yet.
+                if (!saveData.unlockedLevels.Contains("Level_05"))
+                {
+                    saveData.unlockedLevels.Add("Level_05");
+                }
+                if (!saveData.unlockedLevels.Contains("Level_06"))
+                {
+                    saveData.unlockedLevels.Add("Level_06");
+                }
+                break;
+            case "Level_05":
+                if (saveData.unlockedLevels.Contains("Level_05"))
+                {
+                    saveData.unlockedLevels.Remove("Level_05");
+                }
+                // Only add the next level if both boss prereq levels have finished.
+                if (saveData.unlockedLevels.Contains("BossPrereq1") && !saveData.unlockedLevels.Contains("Level_07"))
+                {
+                    saveData.unlockedLevels.Add("Level_07");
+                } else
+                {
+                    saveData.unlockedLevels.Add("BossPrereq2");
+                }
+                break;
+            case "Level_06":
+                if (saveData.unlockedLevels.Contains("Level_06"))
+                {
+                    saveData.unlockedLevels.Remove("Level_06");
+                }
+                // Only add the next level if both boss prereq levels have finished.
+                if (saveData.unlockedLevels.Contains("BossPrereq2") && !saveData.unlockedLevels.Contains("Level_07"))
+                {
+                    saveData.unlockedLevels.Add("Level_07");
+                }
+                else
+                {
+                    saveData.unlockedLevels.Add("BossPrereq1");
+                }
+                break;
+            case "Level_07":
+                if (saveData.unlockedLevels.Count > 0)
+                {
+                    saveData.unlockedLevels.Clear();
+                }
+                saveData.unlockedLevels.Add("Level_01");
+                break;
+            default:
+                break;
         }
+
         SceneHandler.instance.LoadLevelFromLevelType(E_LevelType.LevelSelect, "LevelSelect");
     }
 
@@ -401,7 +490,14 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
             playerController.TakeDamage(attackDamage);
 
-            audioHandler.PlayAudio(zombieAttack);
+            // Audio Feedback
+            AudioHandler.instance.PlaySFX(zombieAttack);
+
+            // Touch Feedback
+            if (Vibration.HasVibrator())
+            {
+                Vibration.Vibrate(Settings.takeDamageVibrationMilliseconds);
+            }
 
             timeToNextAttackUI.fillAmount = 1.0f;
 

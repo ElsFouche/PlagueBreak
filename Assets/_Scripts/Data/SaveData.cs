@@ -4,10 +4,14 @@ using System.Collections.Generic;
 public class SaveData
 {
     // Settings
-    public float volume = 1.0f;
+    // public float volume = 1.0f; // Master volume. Deprecated. 
+    public float volumeBGM = 1.0f;
+    public float volumeSFX = 1.0f;
+    public bool isHardMode = false;
+    public bool useVibration = true;
 
     // Levels 
-    public List<string> completedLevels;
+    public List<string> unlockedLevels;
     public string currentLevel;
 
     // Upgrade Data
@@ -23,7 +27,7 @@ public class SaveData
 
     public SaveData()
     {
-        completedLevels = new List<string> { "NULL" };
+        unlockedLevels = new List<string> (F_GameSettings.defaultUnlockedLevels);
         currentLevel = "";
 
         playerDamageBoost = 0;

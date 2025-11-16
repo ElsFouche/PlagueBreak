@@ -1,5 +1,4 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -90,6 +89,11 @@ public class TouchHandling : MonoBehaviour
 
         doubleClickPrevention = StartCoroutine(ResetClickLockout());
         touchStartPos = GetFingerPosition();
+
+        if (Vibration.HasVibrator() && SaveManager.instance.GetSaveData().useVibration)
+        {
+            Vibration.Vibrate(Settings.touchVibrationMilliseconds);
+        }
     }
 
     /// <summary>

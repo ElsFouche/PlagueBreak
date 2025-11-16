@@ -56,8 +56,21 @@ public class UpgradeShopButton : MonoBehaviour
         currencyDisplay = (CurrencyDisplay)FindFirstObjectByType(typeof(CurrencyDisplay));
 
         UpdateCost();
-        UpdateProgress();
+        // UpdateProgress();
         InitializeProgressBar();
+    }
+    
+    // This is shit, shouldn't be in update. 
+    private void FixedUpdate()
+    {
+        if (currCost > saveData.crystals)
+        {
+            this.gameObject.GetComponent<Button>().interactable = false;
+        }
+        else
+        {
+            this.gameObject.GetComponent<Button>().interactable = true;
+        }
     }
 
     public void OnUpgradeClick()
@@ -123,7 +136,51 @@ public class UpgradeShopButton : MonoBehaviour
 
     private void InitializeProgressBar()
     {
-        // Put functionality here for initializing the bar. 
+        // Simulate clicks
+        for (int i = 0; i < timesClicked; i++)
+        {
+            int modTarget = i % progressSegments.Count;
+
+            UnityEngine.Color currColor = progressSegments[modTarget].color;
+
+            Vector3 newHSV = Vector3.zero;
+            UnityEngine.Color.RGBToHSV(currColor, out newHSV.x, out newHSV.y, out newHSV.z);
+
+            newHSV.x += (1.0f / maxUpgradeBars);
+            newHSV.x %= 1.0f;
+
+            if (newHSV.y < 0.9f)
+            {
+                newHSV.y += 1.0f / maxUpgradeBars;
+                newHSV.y = Mathf.Min(newHSV.y, 0.9f);
+            }
+            if (newHSV.z < 0.9f)
+            {
+                newHSV.z += 1.0f / maxUpgradeBars;
+                newHSV.z = Mathf.Min(newHSV.y, 0.9f);
+            }
+
+            progressSegments[modTarget].color = UnityEngine.Color.HSVToRGB(newHSV.x, newHSV.y, newHSV.z);
+        }
+
+        // Update text
+        if (progressText != null)
+        {
+            if (playerDamageBoost > 0)
+            {
+                progressText.text = "+" + saveData.playerDamageBoost.ToString() + "%";
+            }
+
+            if (playerHealthBoost > 0)
+            {
+                progressText.text = "+" + saveData.playerHealthBoost.ToString() + "%";
+            }
+
+            if (playerDamageMultiplier > 0)
+            {
+                progressText.text = "+" + saveData.playerDamageMultiplier.ToString() + "%";
+            }
+        }
     }
 
     private void UpdateProgress()
