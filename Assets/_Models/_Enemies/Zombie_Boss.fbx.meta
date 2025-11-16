@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 655875ff39707104bb79f02c3215f3c3
+guid: aca42b92951c3894c9bf5d295e379189
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,13 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Zombie_UV
-    second: {fileID: 2100000, guid: 7c5fb00ce399efa45956aaed12cf1c60, type: 2}
+      name: Zombie_Boss1
+    second: {fileID: 2100000, guid: c0bb2215f4602414294b31f114a85bdf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Zombie_Boss_Extras
+    second: {fileID: 2100000, guid: ed8398faab7140f48b35b1136d3a35a0, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -38,7 +43,7 @@ ModelImporter:
     isReadable: 0
   meshes:
     lODScreenPercentages: []
-    globalScale: 1
+    globalScale: 100
     meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
@@ -70,7 +75,7 @@ ModelImporter:
     secondaryUVMinLightmapResolution: 40
     secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
-    useFileScale: 0
+    useFileScale: 1
     strictVertexDataChecks: 0
   tangentSpace:
     normalSmoothAngle: 60
