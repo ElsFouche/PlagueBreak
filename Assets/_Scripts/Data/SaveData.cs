@@ -1,14 +1,14 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 
 [System.Serializable]
 public class SaveData
 {
     // Settings
-    public float volume = 1.0f;
+    // public float volume = 1.0f; // Master volume. Deprecated. 
     public float volumeBGM = 1.0f;
     public float volumeSFX = 1.0f;
     public bool isHardMode = false;
+    public bool useVibration = true;
 
     // Levels 
     public List<string> unlockedLevels;

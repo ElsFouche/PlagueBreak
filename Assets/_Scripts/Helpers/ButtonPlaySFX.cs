@@ -1,5 +1,9 @@
 using UnityEngine;
 
+/// <summary>
+/// This script should be attached to the topmost parent of a UI object and
+/// referenced by any buttons contained within it in order to play SFX. 
+/// </summary>
 public class ButtonPlaySFX : MonoBehaviour
 {
     public AudioClip sFX;

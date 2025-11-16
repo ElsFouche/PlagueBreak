@@ -1376,7 +1376,7 @@ PrefabInstance:
     - target: {fileID: 2315438445070917189, guid: c086a94285d846a41b0426d244578d50, type: 3}
       propertyPath: backgroundMusic
       value: 
-      objectReference: {fileID: 8300000, guid: 39cb90f1be615a34a867ea247ec5a979, type: 3}
+      objectReference: {fileID: 8300000, guid: ce302240a426b33499206c8671b1d329, type: 3}
     - target: {fileID: 2675484340605373213, guid: c086a94285d846a41b0426d244578d50, type: 3}
       propertyPath: m_Name
       value: BGM

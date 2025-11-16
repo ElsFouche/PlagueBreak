@@ -2094,7 +2094,6 @@ GameObject:
   - component: {fileID: 879615853}
   - component: {fileID: 879615856}
   - component: {fileID: 879615855}
-  - component: {fileID: 879615857}
   m_Layer: 5
   m_Name: bHealthUP
   m_TagString: Untagged
@@ -2224,18 +2223,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &879615857
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 879615849}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c074c20d1dbdfa469d6d7bb1859f972, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &894230068
 GameObject:
   m_ObjectHideFlags: 0
@@ -3511,7 +3498,7 @@ GameObject:
   - component: {fileID: 1569199679}
   - component: {fileID: 1569199680}
   m_Layer: 5
-  m_Name: Row2
+  m_Name: ProgressBars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4369,7 +4356,7 @@ MonoBehaviour:
   playerDamageMultiplier: 0
   baseCost: 5
   maxUpgradeBars: 4
-  allowInfiniteUpgrades: 1
+  allowInfiniteUpgrades: 0
   buttonID: DamageUP
   costText: {fileID: 227779971}
   progressText: {fileID: 934602305}
@@ -4533,7 +4520,6 @@ GameObject:
   - component: {fileID: 1768419969}
   - component: {fileID: 1768419971}
   - component: {fileID: 1768419970}
-  - component: {fileID: 1768419972}
   m_Layer: 5
   m_Name: bDmgMultUP
   m_TagString: Untagged
@@ -4663,20 +4649,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &1768419972
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1768419965}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c074c20d1dbdfa469d6d7bb1859f972, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  clip: {fileID: 8300000, guid: beb97e413ce92dc47bf40d22b844c424, type: 3}
-  priority: 0
 --- !u!1 &1931523387
 GameObject:
   m_ObjectHideFlags: 0
@@ -4688,7 +4660,7 @@ GameObject:
   - component: {fileID: 1931523388}
   - component: {fileID: 1931523389}
   m_Layer: 5
-  m_Name: Row1
+  m_Name: Buttons
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

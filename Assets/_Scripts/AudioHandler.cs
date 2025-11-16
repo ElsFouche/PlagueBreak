@@ -117,6 +117,14 @@ public class AudioHandler : MonoBehaviour
         }
     }
 
+    public void UpdateVolumeBGM(float newVolume)
+    {
+        if (audioSourceBGM != null)
+        {
+            audioSourceBGM.volume = newVolume * volumeBGM;
+        }
+    }
+
     public void PlaySFX(AudioClip clip, int clipPriority = 256, float volumeModifier = 1.0f)
     {
         if (clip == null) { return; }

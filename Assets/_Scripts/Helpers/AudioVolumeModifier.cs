@@ -2,6 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// This script modifies the volume of the associated audio source based on the user's saved volume preference. 
+/// It was created as a patch for certain audio behaviors and is now depcrecated. 
 /// </summary>
 public class AudioVolumeModifier : MonoBehaviour
 {

@@ -93,6 +93,12 @@ public class SaveManager : MonoBehaviour
         dataHandler.SaveToFile(this.saveData);
     }
 
+    public void DeleteSave(string profile = Settings.defaultProfileName)
+    {
+        dataHandler.DeleteFile(profile);
+        NewGame();
+    }
+
     public ref SaveData GetSaveData()
     {
         return ref this.saveData;

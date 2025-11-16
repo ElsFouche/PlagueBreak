@@ -90,7 +90,7 @@ public class TouchHandling : MonoBehaviour
         doubleClickPrevention = StartCoroutine(ResetClickLockout());
         touchStartPos = GetFingerPosition();
 
-        if (Vibration.HasVibrator())
+        if (Vibration.HasVibrator() && SaveManager.instance.GetSaveData().useVibration)
         {
             Vibration.Vibrate(Settings.touchVibrationMilliseconds);
         }
