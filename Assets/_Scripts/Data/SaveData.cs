@@ -6,6 +6,8 @@ public class SaveData
 {
     // Settings
     public float volume = 1.0f;
+    public float volumeBGM = 1.0f;
+    public float volumeSFX = 1.0f;
     public bool isHardMode = false;
 
     // Levels 

@@ -12,7 +12,8 @@ public class SaveManager : MonoBehaviour
     private SaveData saveData;
     private List<ISaveLoad> subscribers = new();
     private SaveDataHandler dataHandler;
-
+    
+    // Singleton
     public static SaveManager instance { get; private set; }
 
     /// <summary>
