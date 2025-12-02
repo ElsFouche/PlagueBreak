@@ -201,6 +201,10 @@ public class GamePiece : MonoBehaviour
         if (CR_PieceReturn == null)
         {
             CR_PieceReturn = StartCoroutine(PieceReturn(time, checkForMatches));
+        } else
+        {
+            StopCoroutine(CR_PieceReturn);
+            CR_PieceReturn = StartCoroutine(PieceReturn(time, checkForMatches));
         }
 
         yield return null;
@@ -230,15 +234,20 @@ public class GamePiece : MonoBehaviour
         if (checkForMatches)
         {
             yield return new WaitForEndOfFrame();
-            FindHorizontalMatches(this);
-            FindVerticalMatches(this);
-            gameBoard.GetPlayerController().HarmEnemiesFromMatchCount(verticalMatches.Count, F_GameSettings.autoMatchDamageMultiplier);
-            gameBoard.GetPlayerController().HarmEnemiesFromMatchCount(horizontalMatches.Count, F_GameSettings.autoMatchDamageMultiplier);
-            StartCoroutine(MatchMade());
+            CheckForMatches();
         }
 
         CR_PieceReturn = null;
         yield return null;
+    }
+
+    private void CheckForMatches()
+    {
+        FindHorizontalMatches(this);
+        FindVerticalMatches(this);
+        gameBoard.GetPlayerController().HarmEnemiesFromMatchCount(verticalMatches.Count, F_GameSettings.autoMatchDamageMultiplier);
+        gameBoard.GetPlayerController().HarmEnemiesFromMatchCount(horizontalMatches.Count, F_GameSettings.autoMatchDamageMultiplier);
+        StartCoroutine(MatchMade());
     }
 
     /// <summary>
@@ -431,7 +440,11 @@ public class GamePiece : MonoBehaviour
             
             if (matchMadeParticles != null)
             {
-                Instantiate(matchMadeParticles, new Vector3(this.GetOriginalPosition().x, this.GetOriginalPosition().y, this.GetOriginalPosition().z - 1.0f), Quaternion.identity);
+                Instantiate(matchMadeParticles, 
+                            new Vector3(this.GetOriginalPosition().x, 
+                                        this.GetOriginalPosition().y, 
+                                        this.GetOriginalPosition().z - 1.0f), 
+                            Quaternion.identity);
                 matchMadeParticles.GetComponent<ParticleSystem>().Play();
             }
 

@@ -4905,4 +4905,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   destroyOnAwake: 0
-  destroyAfterSeconds: 3
+  destroyAfterSeconds: 1
