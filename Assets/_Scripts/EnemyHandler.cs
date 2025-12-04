@@ -69,6 +69,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     private Coroutine CR_HarmPlayer = null;
     private Coroutine CR_HarmPaused = null;
     private Coroutine CR_DamageFlash = null;
+    private Dictionary<GameObject, Coroutine> CR_DamageFlashes = new();
 
     /// <summary>
     /// Debug gizmos to show enemy spawn locations.
@@ -253,12 +254,14 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
                 enemyIndices.Add(index);
             }
             int rnd = enemyIndices.ElementAt(UnityEngine.Random.Range(0, enemyIndices.Count() - 1));
+            
             if (spawnedEnemies.ContainsKey(rnd))
             {
                 enemy = spawnedEnemies[rnd];
-                if (CR_DamageFlash == null)
+
+                if (!CR_DamageFlashes.ContainsKey(enemy))
                 {
-                    CR_DamageFlash = StartCoroutine(DamageFlash(enemy));
+                    CR_DamageFlashes.Add(enemy, StartCoroutine(DamageFlash(enemy)));
                 }
             }
         }
@@ -314,7 +317,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         }
 
         int index = 0;
-        while (timer < duration && enemyMats.Count > 0)
+        while (timer < duration)
         {
             foreach (var enemyMat in enemyMats)
             {
@@ -340,6 +343,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             timer += Time.deltaTime;
         }
 
+        // Reset material
         index = 0;
         foreach (var childMat in enemyMats)
         {
@@ -355,6 +359,8 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         }
 
         CR_DamageFlash = null;
+
+        CR_DamageFlashes.Remove(enemy);
     }
 
     private void LevelComplete()

@@ -278,7 +278,7 @@ public class PlayerController : TouchHandling , ISaveLoad
             if (Camera.main.TryGetComponent<CameraShake>(out CameraShake shaker))
             {
                 Debug.Log("Starting shaker.");
-                shaker.Shake(50.0f, 0.5f);
+                shaker.Shake(100.0f, 0.5f);
             }
             if (playerHealth <= 0.0f)
             {
