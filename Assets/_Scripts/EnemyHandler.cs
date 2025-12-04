@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Settings = F_GameSettings;
 
 /// <summary>
@@ -29,6 +30,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     [SerializeField] private RectTransform waveHealthBar;
     [SerializeField] private TMP_Text waveCount;
     [SerializeField] private UnityEngine.UI.Image timeToNextAttackUI;
+    [SerializeField] private UnityEngine.UI.Image attackWarningSymbol;
 
     [Header("Audio")]
     [Tooltip("Add audio clips here.")]
@@ -39,6 +41,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     [SerializeField] private AudioClip zombieDeath;
     [Tooltip("Add audio clips here.")]
     [SerializeField] private AudioClip victory;
+    [SerializeField] private AudioClip attackWarning;
 
     [Header("Enemy Appearance")]
     [SerializeField] private List<GameObject> basicEnemies = new();
@@ -106,6 +109,23 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         } else if (levelComplete == null)
         {
             levelComplete = Instantiate(new GameObject("LevelComplete")).AddComponent<LevelComplete>();
+        }
+
+        if (timeToNextAttackUI == null)
+        {
+            if (GameObject.FindGameObjectWithTag("TimeToNextAttackUI").TryGetComponent<Image>(out Image i))
+            {
+                timeToNextAttackUI = i;
+            }
+        }
+
+        if (attackWarningSymbol == null)
+        {
+            if (GameObject.FindGameObjectWithTag("IncomingAttackIndicatorUI").TryGetComponent<Image>(out Image i))
+            {
+                attackWarningSymbol = i;
+                attackWarningSymbol.gameObject.SetActive(false);
+            }
         }
 
         saveData = SaveManager.instance.GetSaveData();
@@ -444,7 +464,8 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             CR_HarmPaused = null;
         }
 
-        timeToNextAttackUI.fillAmount = 1.0f;
+        if (timeToNextAttackUI != null) { timeToNextAttackUI.fillAmount = 1.0f; }
+        if (attackWarningSymbol != null) { attackWarningSymbol.gameObject.SetActive(false); }
         
         if (CR_HarmPlayer != null)
         {
@@ -464,9 +485,9 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         }
 
         // If no countdown UI, skip decrementing and instead wait directly. 
-        if (!timeToNextAttackUI)
+        if (!timeToNextAttackUI || !attackWarningSymbol)
         {
-            Debug.Log("No attack UI found. Are you sure you set up the scene correctly?");
+            Debug.Log("Missing attack UI. Are you sure you set up the scene correctly?");
             yield return null;
 /*
             yield return new WaitForSeconds(timeBetweenAttacks);
@@ -485,6 +506,21 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
                 // Distance = 1 (max fill amount) 
                 timeToNextAttackUI.fillAmount = Mathf.Max(timeToNextAttackUI.fillAmount - (updateFrequency / timeBetweenAttacks), 0.0f);
 
+                if (timeToNextAttackUI.fillAmount < 0.25)
+                {
+                    if ((int)(timeToNextAttackUI.fillAmount * 100) % 3 == 0)
+                    {
+                        attackWarningSymbol.gameObject.SetActive(true);
+                        if (attackWarning != null)
+                        {
+                            AudioHandler.instance.PlaySFX(attackWarning);
+                        }
+                    } else
+                    {
+                        attackWarningSymbol.gameObject.SetActive(false);
+                    }
+                }
+
                 yield return new WaitForSeconds(updateFrequency);
             }
 
@@ -500,6 +536,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             }
 
             timeToNextAttackUI.fillAmount = 1.0f;
+            attackWarningSymbol.gameObject.SetActive(false);
 
             // Pass control to harm paused
             CR_HarmPaused = StartCoroutine(HarmPausedIndicator(Settings.playerISeconds));
