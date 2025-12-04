@@ -68,6 +68,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         // Coroutine Lockouts
     private Coroutine CR_HarmPlayer = null;
     private Coroutine CR_HarmPaused = null;
+    private Coroutine CR_DamageFlash = null;
 
     /// <summary>
     /// Debug gizmos to show enemy spawn locations.
@@ -242,6 +243,26 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
         AudioHandler.instance.PlaySFX(zombieDamaged);
 
+        GameObject enemy;
+
+        if (spawnedEnemies.Count > 0)
+        {
+            List<int> enemyIndices = new();
+            foreach (int index in spawnedEnemies.Keys)
+            {
+                enemyIndices.Add(index);
+            }
+            int rnd = enemyIndices.ElementAt(UnityEngine.Random.Range(0, enemyIndices.Count() - 1));
+            if (spawnedEnemies.ContainsKey(rnd))
+            {
+                enemy = spawnedEnemies[rnd];
+                if (CR_DamageFlash == null)
+                {
+                    CR_DamageFlash = StartCoroutine(DamageFlash(enemy));
+                }
+            }
+        }
+
         // If the percent of the wave health is less than the percent of remaining enemies...
         // num of spawned enemies / (enemies in wave + 1) because it offsets the breakpoints where
         // enemies disappear
@@ -256,10 +277,11 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             {
                 enemyIndices.Add(index);
             }
-            int destroyEnemyAtIndex = enemyIndices[UnityEngine.Random.Range(0, enemyIndices.Count() - 1)];
+            int destroyEnemyAtIndex = enemyIndices.ElementAt(UnityEngine.Random.Range(0, enemyIndices.Count() - 1));
 
             Destroy(spawnedEnemies[destroyEnemyAtIndex]);
             spawnedEnemies.Remove(destroyEnemyAtIndex);
+            enemyIndices.Remove(destroyEnemyAtIndex);
 
             AudioHandler.instance.PlaySFX(zombieDeath, 19);
         }
@@ -272,6 +294,67 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             EarnCrystals(0.25f);
             LevelComplete();
         }
+    }
+
+    private IEnumerator DamageFlash(GameObject enemy, float duration = 0.5f)
+    {
+        float timer = 0.0f;
+        List<Material> enemyMats = new();
+        List<Color> startColors = new();
+        List<Texture> enemyTextures = new();
+
+        foreach (var childMat in enemy.GetComponentsInChildren<MeshRenderer>())
+        {
+            if (childMat != null)
+            {
+                enemyMats.Add(childMat.material);
+                enemyTextures.Add(childMat.material.mainTexture);
+                startColors.Add(childMat.material.color);
+            }
+        }
+
+        int index = 0;
+        while (timer < duration && enemyMats.Count > 0)
+        {
+            foreach (var enemyMat in enemyMats)
+            {
+                if ((int)(timer*100) % 3 == 0)
+                {
+                    enemyMat.mainTexture = null;
+                    enemyMat.color = new Color(1.0f, 1.0f, 1.0f);
+                } else
+                {
+                    if (index < enemyTextures.Count)
+                    {
+                        enemyMat.mainTexture = enemyTextures[index];
+                    }
+                    if (index < startColors.Count)
+                    {
+                        enemyMat.color = startColors[index];
+                    }
+                }
+                index++;
+            }
+
+            yield return new WaitForEndOfFrame();
+            timer += Time.deltaTime;
+        }
+
+        index = 0;
+        foreach (var childMat in enemyMats)
+        {
+            if (index < enemyTextures.Count)
+            {
+                childMat.mainTexture = enemyTextures[index];
+            }
+            if (index < startColors.Count)
+            {
+                childMat.color = startColors[index];
+            }
+            index++;
+        }
+
+        CR_DamageFlash = null;
     }
 
     private void LevelComplete()

@@ -275,11 +275,14 @@ public class PlayerController : TouchHandling , ISaveLoad
             Debug.Log("Player damaged: " + damage);
             playerHealth = Mathf.Clamp(playerHealth - damage, 0.0f, Settings.playerHealthMax);
             UpdateHealthDisplay();
+            if (Camera.main.TryGetComponent<CameraShake>(out CameraShake shaker))
+            {
+                Debug.Log("Starting shaker.");
+                shaker.Shake(50.0f, 0.5f);
+            }
             if (playerHealth <= 0.0f)
             {
                 Debug.Log("Game over.");
-                // This should be updated to use the Scene Handler and death should be
-                // implemented thoughtfully. 
                 saveData.unlockedLevels.Clear();
                 saveData.unlockedLevels = Settings.defaultUnlockedLevels;
                 SceneHandler.instance.LoadLevelFromName("GameOver", "GameOver");
