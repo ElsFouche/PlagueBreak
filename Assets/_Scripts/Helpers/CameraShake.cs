@@ -67,13 +67,13 @@ public class CameraShake : MonoBehaviour
     private IEnumerator ReturnToStart()
     {
         float timer = 0.0f;
-        while (Mathf.Abs(transform.rotation.y) - Mathf.Abs(startRotation.y) > 0.01f)
+        while (Mathf.Abs(transform.rotation.y) - Mathf.Abs(startRotation.y) > 0.0001f)
         {
             transform.rotation = new Quaternion(startRotation.x,
                                                 (Mathf.SmoothStep(transform.rotation.y, startRotation.y, timer)),
                                                 startRotation.z,
                                                 startRotation.w);
-
+            Debug.Log("Rotation: " + transform.rotation);
             yield return new WaitForEndOfFrame();
             timer += Time.deltaTime;
         }
