@@ -620,7 +620,7 @@ PrefabInstance:
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: attackWarning
       value: 
-      objectReference: {fileID: 8300000, guid: 810bb3bd37039c749976ade962217da1, type: 3}
+      objectReference: {fileID: 0}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: waveHealthBar
       value: 
@@ -900,7 +900,7 @@ Transform:
   m_GameObject: {fileID: 582272388}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.9986295, z: -0.052335896, w: 0}
-  m_LocalPosition: {x: -1.82, y: 1.28, z: 1.9100002}
+  m_LocalPosition: {x: -1.73, y: 1.27, z: 1.91}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1714,7 +1714,7 @@ Transform:
   m_GameObject: {fileID: 1703414317}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0001735591, y: 0.9986241, z: -0.052335612, w: 0.0033117086}
-  m_LocalPosition: {x: 1.727, y: 1.28, z: 1.91}
+  m_LocalPosition: {x: 1.16, y: 1.78, z: 1.85}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
