@@ -143,8 +143,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 72401214}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.1479288, y: 0.810126, z: -9.033298}
+  m_LocalRotation: {x: -0.1055323, y: -0, z: -0, w: 0.9944159}
+  m_LocalPosition: {x: -0.1479288, y: 8.990126, z: 2.2364292}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -156,7 +156,7 @@ Transform:
   - {fileID: 624337919}
   - {fileID: 1459551858}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -12.116, y: 0, z: 0}
 --- !u!1001 &126492210
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -408,9 +408,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1643264619}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
+      propertyPath: tanks.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: timeToNextAttackUI
       value: 
       objectReference: {fileID: 1643264617}
+    - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
+      propertyPath: 'tanks.Array.data[0]'
+      value: 
+      objectReference: {fileID: 4397639106388311605, guid: 0dab14d969c417c41af4811a85954b0b, type: 3}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: spawnPoints.Array.size
       value: 2
@@ -450,6 +458,14 @@ PrefabInstance:
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: spawnPoints.Array.data[1].y
       value: 3.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
+      propertyPath: enemies.Array.data[0].baseDamage
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
+      propertyPath: enemies.Array.data[1].baseDamage
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -996,19 +1012,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4429821366292325151, guid: a84521780500e8b49a328153a841de45, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -4.56
+      value: 3.62
       objectReference: {fileID: 0}
     - target: {fileID: 4429821366292325151, guid: a84521780500e8b49a328153a841de45, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.89972687
+      value: 10.37
       objectReference: {fileID: 0}
     - target: {fileID: 4429821366292325151, guid: a84521780500e8b49a328153a841de45, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.9944159
       objectReference: {fileID: 0}
     - target: {fileID: 4429821366292325151, guid: a84521780500e8b49a328153a841de45, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0.1055323
       objectReference: {fileID: 0}
     - target: {fileID: 4429821366292325151, guid: a84521780500e8b49a328153a841de45, type: 3}
       propertyPath: m_LocalRotation.y
@@ -1020,7 +1036,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4429821366292325151, guid: a84521780500e8b49a328153a841de45, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
+      value: -12.116
       objectReference: {fileID: 0}
     - target: {fileID: 4429821366292325151, guid: a84521780500e8b49a328153a841de45, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
