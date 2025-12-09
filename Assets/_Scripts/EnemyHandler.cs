@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Settings = F_GameSettings;
 
 /// <summary>
@@ -29,6 +30,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     [SerializeField] private RectTransform waveHealthBar;
     [SerializeField] private TMP_Text waveCount;
     [SerializeField] private UnityEngine.UI.Image timeToNextAttackUI;
+    [SerializeField] private UnityEngine.UI.Image attackWarningSymbol;
 
     [Header("Audio")]
     [Tooltip("Add audio clips here.")]
@@ -39,6 +41,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
     [SerializeField] private AudioClip zombieDeath;
     [Tooltip("Add audio clips here.")]
     [SerializeField] private AudioClip victory;
+    [SerializeField] private AudioClip attackWarning;
 
     [Header("Enemy Appearance")]
     [SerializeField] private List<GameObject> basicEnemies = new();
@@ -65,6 +68,8 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         // Coroutine Lockouts
     private Coroutine CR_HarmPlayer = null;
     private Coroutine CR_HarmPaused = null;
+    private Coroutine CR_DamageFlash = null;
+    private Dictionary<GameObject, Coroutine> CR_DamageFlashes = new();
 
     /// <summary>
     /// Debug gizmos to show enemy spawn locations.
@@ -106,6 +111,23 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         } else if (levelComplete == null)
         {
             levelComplete = Instantiate(new GameObject("LevelComplete")).AddComponent<LevelComplete>();
+        }
+
+        if (timeToNextAttackUI == null)
+        {
+            if (GameObject.FindGameObjectWithTag("TimeToNextAttackUI").TryGetComponent<Image>(out Image i))
+            {
+                timeToNextAttackUI = i;
+            }
+        }
+
+        if (attackWarningSymbol == null)
+        {
+            if (GameObject.FindGameObjectWithTag("IncomingAttackIndicatorUI").TryGetComponent<Image>(out Image i))
+            {
+                attackWarningSymbol = i;
+                attackWarningSymbol.gameObject.SetActive(false);
+            }
         }
 
         saveData = SaveManager.instance.GetSaveData();
@@ -222,6 +244,28 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
 
         AudioHandler.instance.PlaySFX(zombieDamaged);
 
+        GameObject enemy;
+
+        if (spawnedEnemies.Count > 0)
+        {
+            List<int> enemyIndices = new();
+            foreach (int index in spawnedEnemies.Keys)
+            {
+                enemyIndices.Add(index);
+            }
+            int rnd = enemyIndices.ElementAt(UnityEngine.Random.Range(0, enemyIndices.Count() - 1));
+            
+            if (spawnedEnemies.ContainsKey(rnd))
+            {
+                enemy = spawnedEnemies[rnd];
+
+                if (!CR_DamageFlashes.ContainsKey(enemy))
+                {
+                    CR_DamageFlashes.Add(enemy, StartCoroutine(DamageFlash(enemy)));
+                }
+            }
+        }
+
         // If the percent of the wave health is less than the percent of remaining enemies...
         // num of spawned enemies / (enemies in wave + 1) because it offsets the breakpoints where
         // enemies disappear
@@ -236,10 +280,11 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             {
                 enemyIndices.Add(index);
             }
-            int destroyEnemyAtIndex = enemyIndices[UnityEngine.Random.Range(0, enemyIndices.Count() - 1)];
+            int destroyEnemyAtIndex = enemyIndices.ElementAt(UnityEngine.Random.Range(0, enemyIndices.Count() - 1));
 
             Destroy(spawnedEnemies[destroyEnemyAtIndex]);
             spawnedEnemies.Remove(destroyEnemyAtIndex);
+            enemyIndices.Remove(destroyEnemyAtIndex);
 
             AudioHandler.instance.PlaySFX(zombieDeath, 19);
         }
@@ -252,6 +297,70 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             EarnCrystals(0.25f);
             LevelComplete();
         }
+    }
+
+    private IEnumerator DamageFlash(GameObject enemy, float duration = 0.5f)
+    {
+        float timer = 0.0f;
+        List<Material> enemyMats = new();
+        List<Color> startColors = new();
+        List<Texture> enemyTextures = new();
+
+        foreach (var childMat in enemy.GetComponentsInChildren<MeshRenderer>())
+        {
+            if (childMat != null)
+            {
+                enemyMats.Add(childMat.material);
+                enemyTextures.Add(childMat.material.mainTexture);
+                startColors.Add(childMat.material.color);
+            }
+        }
+
+        int index = 0;
+        while (timer < duration)
+        {
+            foreach (var enemyMat in enemyMats)
+            {
+                if ((int)(timer*100) % 3 == 0)
+                {
+                    enemyMat.mainTexture = null;
+                    enemyMat.color = new Color(1.0f, 1.0f, 1.0f);
+                } else
+                {
+                    if (index < enemyTextures.Count)
+                    {
+                        enemyMat.mainTexture = enemyTextures[index];
+                    }
+                    if (index < startColors.Count)
+                    {
+                        enemyMat.color = startColors[index];
+                    }
+                }
+                index++;
+            }
+
+            yield return new WaitForEndOfFrame();
+            timer += Time.deltaTime;
+        }
+
+        // Reset material
+        index = 0;
+        foreach (var childMat in enemyMats)
+        {
+            if (index < enemyTextures.Count)
+            {
+                childMat.mainTexture = enemyTextures[index];
+            }
+            if (index < startColors.Count)
+            {
+                childMat.color = startColors[index];
+            }
+            index++;
+        }
+
+        CR_DamageFlash = null;
+
+        CR_DamageFlashes.Remove(enemy);
     }
 
     private void LevelComplete()
@@ -444,7 +553,8 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             CR_HarmPaused = null;
         }
 
-        timeToNextAttackUI.fillAmount = 1.0f;
+        if (timeToNextAttackUI != null) { timeToNextAttackUI.fillAmount = 1.0f; }
+        if (attackWarningSymbol != null) { attackWarningSymbol.gameObject.SetActive(false); }
         
         if (CR_HarmPlayer != null)
         {
@@ -464,9 +574,9 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
         }
 
         // If no countdown UI, skip decrementing and instead wait directly. 
-        if (!timeToNextAttackUI)
+        if (!timeToNextAttackUI || !attackWarningSymbol)
         {
-            Debug.Log("No attack UI found. Are you sure you set up the scene correctly?");
+            Debug.Log("Missing attack UI. Are you sure you set up the scene correctly?");
             yield return null;
 /*
             yield return new WaitForSeconds(timeBetweenAttacks);
@@ -485,6 +595,21 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
                 // Distance = 1 (max fill amount) 
                 timeToNextAttackUI.fillAmount = Mathf.Max(timeToNextAttackUI.fillAmount - (updateFrequency / timeBetweenAttacks), 0.0f);
 
+                if (timeToNextAttackUI.fillAmount < 0.25)
+                {
+                    if ((int)(timeToNextAttackUI.fillAmount * 100) % 3 == 0)
+                    {
+                        attackWarningSymbol.gameObject.SetActive(true);
+                        if (attackWarning != null)
+                        {
+                            AudioHandler.instance.PlaySFX(attackWarning);
+                        }
+                    } else
+                    {
+                        attackWarningSymbol.gameObject.SetActive(false);
+                    }
+                }
+
                 yield return new WaitForSeconds(updateFrequency);
             }
 
@@ -500,6 +625,7 @@ public class EnemyHandler : MonoBehaviour , ISaveLoad
             }
 
             timeToNextAttackUI.fillAmount = 1.0f;
+            attackWarningSymbol.gameObject.SetActive(false);
 
             // Pass control to harm paused
             CR_HarmPaused = StartCoroutine(HarmPausedIndicator(Settings.playerISeconds));
