@@ -634,6 +634,10 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
+      propertyPath: timeBetweenAttacks
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: timeToNextAttackUI
       value: 
       objectReference: {fileID: 1643264617}
@@ -747,23 +751,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: enemies.Array.data[0].baseDamage
-      value: 12
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: enemies.Array.data[0].baseHealth
-      value: 5
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: enemies.Array.data[1].baseDamage
-      value: 12
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: enemies.Array.data[1].baseHealth
-      value: 5
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: enemies.Array.data[2].baseDamage
-      value: 10
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 7838396506690559697, guid: 39f0df7ccd4ae8248a24c1108a6ea8f0, type: 3}
       propertyPath: enemies.Array.data[2].baseHealth
